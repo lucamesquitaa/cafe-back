@@ -79,10 +79,18 @@ namespace SaudeIA.Migrations
                     b.Property<bool?>("Cleaning")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("Cnpj")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<bool?>("Coffee")
                         .HasColumnType("boolean");
 
                     b.Property<string>("Complement")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CpfRep")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Description")
@@ -94,6 +102,10 @@ namespace SaudeIA.Migrations
 
                     b.Property<bool?>("Downtown")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("EmailRep")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<bool?>("Gym")
                         .HasColumnType("boolean");
@@ -111,6 +123,10 @@ namespace SaudeIA.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("NomeRep")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Number")
                         .IsRequired()
                         .HasColumnType("text");
@@ -121,12 +137,20 @@ namespace SaudeIA.Migrations
                     b.Property<double?>("PetsTax")
                         .HasColumnType("double precision");
 
+                    b.Property<string>("Razao")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Rede")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<bool?>("Swimming")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("TelRep")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("Url")
                         .IsRequired()
@@ -167,6 +191,66 @@ namespace SaudeIA.Migrations
                     b.ToTable("Photos");
                 });
 
+            modelBuilder.Entity("SaudeIA.Models.UserModel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("GoogleId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("LastName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Photo")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Usuarios");
+                });
+
+            modelBuilder.Entity("SaudeIA.Models.UsuarioPermissoes", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("DetalhesModelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserModelEmail")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("UserModelId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DetalhesModelId");
+
+                    b.HasIndex("UserModelId");
+
+                    b.ToTable("UsuarioPermissao");
+                });
+
             modelBuilder.Entity("SaudeIA.Models.ContatosModel", b =>
                 {
                     b.HasOne("SaudeIA.Models.DetalhesModel", null)
@@ -185,11 +269,33 @@ namespace SaudeIA.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("SaudeIA.Models.UsuarioPermissoes", b =>
+                {
+                    b.HasOne("SaudeIA.Models.DetalhesModel", null)
+                        .WithMany("Permissions")
+                        .HasForeignKey("DetalhesModelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SaudeIA.Models.UserModel", null)
+                        .WithMany("Permissions")
+                        .HasForeignKey("UserModelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("SaudeIA.Models.DetalhesModel", b =>
                 {
                     b.Navigation("Contacts");
 
+                    b.Navigation("Permissions");
+
                     b.Navigation("Photos");
+                });
+
+            modelBuilder.Entity("SaudeIA.Models.UserModel", b =>
+                {
+                    b.Navigation("Permissions");
                 });
 #pragma warning restore 612, 618
         }
