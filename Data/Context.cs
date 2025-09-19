@@ -6,6 +6,8 @@ namespace SaudeIA.Data
   public class Context : DbContext
   {
     public DbSet<DetalhesModel> Hotel { get; set; }
+    public DbSet<UserModel> Usuarios { get; set; }
+    public DbSet<UsuarioPermissoes> UsuarioPermissao { get; set; }
     public DbSet<FotosDetalhesModel> Photos { get; set; }
     public DbSet<ContatosModel> Contacts { get; set; }
 
@@ -29,6 +31,20 @@ namespace SaudeIA.Data
           .HasMany(h => h.Contacts)
           .WithOne()
           .HasForeignKey(c => c.DetalhesModelId)
+          .OnDelete(DeleteBehavior.Cascade);
+
+      // Realacionamento N:N
+      modelBuilder.Entity<DetalhesModel>()
+          .HasMany(h => h.Permissions)
+          .WithOne()
+          .HasForeignKey(c => c.DetalhesModelId)
+          .OnDelete(DeleteBehavior.Cascade);
+
+      // Realacionamento N:N
+      modelBuilder.Entity<UserModel>()
+          .HasMany(h => h.Permissions)
+          .WithOne()
+          .HasForeignKey(c => c.UserModelId)
           .OnDelete(DeleteBehavior.Cascade);
     }
   }

@@ -37,5 +37,14 @@ namespace SaudeIA.Models
     public bool? Gym { get; set; }
     public IEnumerable<ContatosModel> Contacts { get; set; } = new List<ContatosModel>();
     public IEnumerable<FotosDetalhesModel> Photos { get; set; } = new List<FotosDetalhesModel>();
+    public IEnumerable<UsuarioPermissoes> Permissions { get; set; } = new List<UsuarioPermissoes>();
+
+    //esconder infos pessoais
+    public string Cnpj { get; set; } = String.Empty;
+    public string Razao { get; set; } = String.Empty;
+    public string NomeRep { get; set; } = String.Empty;
+    public string TelRep { get; set; } = String.Empty;
+    public string CpfRep { get; set; } = String.Empty;
+    public string EmailRep { get; set; } = String.Empty;
   }
 }
