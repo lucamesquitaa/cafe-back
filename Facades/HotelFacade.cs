@@ -11,20 +11,28 @@ using SaudeIA.Services;
 
 namespace SaudeIA.Facades
 {
-  public class HotelFacade : IHotelFacade
+  public class HotelFacade : IHotelFacade, IRetorno
   {
     private readonly Context _context;
     private readonly IRabbitMqProducer _producer;
     private readonly GoogleAuthService _googleAuthService;
+    private readonly UtilsFacade _utilsFacade;
 
-    public HotelFacade(Context context, IRabbitMqProducer producer, GoogleAuthService googleAuthService)
+    // Implementation of IRetorno properties  
+    public bool Sucesso { get; private set; }
+    public string? Mensagem { get; private set; }
+    public string? ExcecaoMensagem { get; private set; }
+    public object? Data { get; private set; }
+
+    public HotelFacade(Context context, IRabbitMqProducer producer, GoogleAuthService googleAuthService, UtilsFacade utilsFacade)
     {
       _context = context;
       _producer = producer;
       _googleAuthService = googleAuthService;
+      _utilsFacade = utilsFacade;
     }
 
-    public async Task<IEnumerable<GetAllHoteis>> GetAllFacade()
+    public async Task<IRetorno<IEnumerable<GetAllHoteis>>> GetAllFacade()
     {
       try
       {
@@ -38,14 +46,14 @@ namespace SaudeIA.Facades
              Url = h.Url,
            }).ToListAsync();
 
-        return hoteis;
+        return Retorno<IEnumerable<GetAllHoteis>>.Ok(hoteis, "Hoteis buscados com sucesso.");
       }
       catch (Exception e)
       {
-        return null;
+        return Retorno<IEnumerable<GetAllHoteis>>.Excecao(e, "Erro ao processar a solicitação.");
       }
     }
-    public async Task<GetDetalheById> GetDetalhesFacade(string hotelId)
+    public async Task<IRetorno<GetDetalheById>> GetDetalhesFacade(string hotelId)
     {
       try
       {
@@ -81,59 +89,58 @@ namespace SaudeIA.Facades
                                         })
                                         .FirstOrDefaultAsync();
 
-        return hotel;
+        return Retorno<GetDetalheById>.Ok(hotel, "Dados do hotel buscados com sucesso.");
       }
       catch (Exception e)
       {
-        return null;
+        return Retorno<GetDetalheById>.Excecao(e, "Erro ao processar a solicitação.");
       }
     }
 
-    public async Task<DetalhesModel> GetDetalhesFacadeByManager(string hotelId)
+    public async Task<IRetorno<DetalhesModel>> GetDetalhesFacadeByManager(string hotelId)
     {
       try
       {
         var userEmail = _googleAuthService.GetUserEmailFromToken();
 
         if (string.IsNullOrEmpty(userEmail))
-          return null;
+          return Retorno<DetalhesModel>.Erro("Usuario não tem permissão para executar esta ação.");
 
-        bool userHasPerm = await UserIsAdminOrManager(hotelId, userEmail);
+        var user = _utilsFacade.GetUserByEmail(userEmail);
+
+        bool userHasPerm = await _utilsFacade.IsAdminOrManager(user.Id.ToString(), hotelId);
 
         if (!userHasPerm)
-          return null;
+          return Retorno<DetalhesModel>.Erro("O usuário não tem permissão para executar esta ação.");
 
         var hotel = await _context.Hotel.Where(u => u.Id.ToString() == hotelId)
                                         .AsNoTracking()
                                         .FirstOrDefaultAsync();
 
-        return hotel;
+        return Retorno<DetalhesModel>.Ok(hotel, "Hoteis foram buscados com sucesso.");
       }
       catch (Exception e)
       {
-        return null;
+        return Retorno<DetalhesModel>.Excecao(e, "Erro ao processar a solicitação.");
       }
     }
 
-    public async Task<IEnumerable<GetAllHoteis>> GetDetalhesUserFacade()
+    public async Task<IRetorno<IEnumerable<GetAllHoteis>>> GetDetalhesUserFacade()
     {
       try
       {
         var userEmail = _googleAuthService.GetUserEmailFromToken();
 
         if (string.IsNullOrEmpty(userEmail))
-          return null;
+          return Retorno<IEnumerable<GetAllHoteis>>.Erro("Usuário não encontrado - email.");
 
-        var userId = await _context.Usuarios
-            .Where(u => u.Email == userEmail)
-            .Select(x => x.Id)
-            .FirstOrDefaultAsync();
+        var user = await _utilsFacade.GetUserByEmail(userEmail);
 
-        if (userId == Guid.Empty)
-          return null;
+        if (user.Id == Guid.Empty)
+          return Retorno<IEnumerable<GetAllHoteis>>.Erro("Usuário não encontrado - id.");
 
         var hotelIds = await _context.UsuarioPermissao
-                                  .Where(up => up.UserModelId == userId &&
+                                  .Where(up => up.UserModelId == user.Id &&
                                                 up.Role == RoleUserModel.Admin || up.Role == RoleUserModel.Manager || up.Role == RoleUserModel.Turify)
                                   .Select(up => up.DetalhesModelId)
                                   .ToListAsync();
@@ -147,37 +154,31 @@ namespace SaudeIA.Facades
                                           Url = h.Url,
                                         }).ToListAsync();
 
-        return hoteis;
+        return Retorno<IEnumerable<GetAllHoteis>>.Ok(hoteis, "Dados buscados com sucesso!"); ;
       }
       catch (Exception e)
       {
-        return null;
+        return Retorno<IEnumerable<GetAllHoteis>>.Excecao(e, "Erro ao processar a solicitação.");
       }
     }
 
-    public async Task<IActionResult> PostDetalhesFacade(DetalhesModel hotel)
+    public async Task<IRetorno> PostDetalhesFacade(DetalhesModel hotel)
     {
       try
       {
         var userEmail = _googleAuthService.GetUserEmailFromToken();
 
         if (string.IsNullOrEmpty(userEmail))
-          return null;
+          return Retorno.Erro("Usuário não encontrado - email.");
 
-        var userId = await _context.Usuarios
-            .Where(u => u.Email == userEmail)
-            .Select(x => x.Id)
-            .FirstOrDefaultAsync();
+        var user = await _utilsFacade.GetUserByEmail(userEmail);
 
-        if (userId == Guid.Empty)
-          return null;
+        if (user == null || user.Id == Guid.Empty)
+          return Retorno.Erro("Usuário não encontrado - id.");
 
-        // Verifica se já existe um hotel com a mesma URL
         var urlHotel = await _context.Hotel.FirstOrDefaultAsync(u => u.Url == hotel.Url);
         if (urlHotel != null)
-        {
-          return new BadRequestObjectResult("Já existe um hotel cadastrado com esta URL.");
-        }
+          return Retorno.Erro("Já existe um hotel cadastrado com esta URL.");
 
         var novoId = Guid.NewGuid();
 
@@ -186,7 +187,7 @@ namespace SaudeIA.Facades
           Id = Guid.NewGuid(),
           DetalhesModelId = novoId,
           UserModelEmail = userEmail,
-          UserModelId = userId,
+          UserModelId = user.Id,
           Role = RoleUserModel.Admin
         };
 
@@ -225,43 +226,41 @@ namespace SaudeIA.Facades
 
         await _context.SaveChangesAsync();
 
-        return new OkResult();
+        return Retorno.Ok("Dados foram registrados com sucesso.");
       }
       catch (Exception e)
       {
-        return new BadRequestObjectResult(e.Message);
+        return Retorno.Excecao(e, "Erro ao processar a solicitação.");
       }
     }
 
 
-    public async Task<IActionResult> PutDetalhesFacade(DetalhesModel hotel, string id)
+    public async Task<IRetorno> PutDetalhesFacade(DetalhesModel hotel, string id)
     {
       try
       {
         var userEmail = _googleAuthService.GetUserEmailFromToken();
 
         if (string.IsNullOrEmpty(userEmail))
-          return null;
+          return Retorno.Erro("Usuário não encontrado - email.");
 
-        bool userHasPerm = await UserIsAdminOrManager(id, userEmail);
+        var user = await _utilsFacade.GetUserByEmail(userEmail);
+
+        if (user == null || user.Id == Guid.Empty)
+          return Retorno.Erro("Usuário não encontrado - id.");
+
+        bool userHasPerm = await _utilsFacade.IsAdminOrManager(user.Id.ToString(), userEmail);
 
         if (!userHasPerm)
-          return new BadRequestObjectResult("Permissão do usuário não é admin/gerente deste hotel."); ;
-
-        var userId = await _context.Usuarios
-            .Where(u => u.Email == userEmail)
-            .Select(x => x.Id)
-            .FirstOrDefaultAsync();
-
-        if (userId == Guid.Empty)
-          return new NotFoundObjectResult("Usuário não encontrado.");
+          return Retorno.Erro("Permissão do usuário não é admin/gerente deste hotel.");
 
         var hotelId = Guid.Parse(id);
+
         var hotelExistente = await _context.Hotel
             .FirstOrDefaultAsync(h => h.Id == hotelId);
 
         if (hotelExistente == null)
-          return new NotFoundObjectResult("Hotel não encontrado.");
+          return Retorno.Erro("Hotel não encontrado.");
 
         // Atualiza propriedades simples
         hotelExistente.Name = hotel.Name;
@@ -298,35 +297,38 @@ namespace SaudeIA.Facades
 
         await _context.SaveChangesAsync();
 
-        return new OkResult();
+        return Retorno.Ok("Dados atualizados com sucesso!");
       }
       catch (Exception e)
       {
-        return new BadRequestObjectResult(e.Message);
+         return Retorno.Excecao(e, "Erro ao processar a solicitação.");
       }
     }
 
 
-    public async Task<IActionResult> DeleteDetalhesFacade(string id)
+    public async Task<IRetorno> DeleteDetalhesFacade(string id)
     {
       try
       {
         var userEmail = _googleAuthService.GetUserEmailFromToken();
 
         if (string.IsNullOrEmpty(userEmail))
-          return new BadRequestObjectResult("Usuário não encontrado.");
+          return Retorno.Erro("Usuário não encontrado - email.");
 
-        bool userHasPerm = await UserIsAdminOrManager(id, userEmail);
+        var user = await _utilsFacade.GetUserByEmail(userEmail);
+
+        if (user == null || user.Id == Guid.Empty)
+          return Retorno.Erro("Usuário não encontrado - id.");
+
+        bool userHasPerm = await _utilsFacade.IsAdminOrManager(user.Id.ToString(), userEmail);
 
         if (!userHasPerm)
-          return new BadRequestObjectResult("Permissão do usuário não é admin/gerente deste hotel.");
+          return Retorno.Erro("Permissão do usuário não é admin/gerente deste hotel.");
 
         var hotel = await _context.Hotel.Where(u => u.Id.ToString() == id).FirstOrDefaultAsync();
-        if (hotel == null)
-        {
-          return new BadRequestObjectResult("Hotel não encontrada.");
 
-        }
+        if (hotel == null)
+          return Retorno.Erro("Hotel não encontrada.");
 
         // Exclui entidades filhas
         var permissoes = await _context.UsuarioPermissao.Where(x => x.DetalhesModelId == hotel.Id).ToListAsync();
@@ -340,31 +342,13 @@ namespace SaudeIA.Facades
 
         _context.Hotel.Remove(hotel);
         await _context.SaveChangesAsync();
-        return new OkResult();
+
+        return Retorno.Ok("Dados deletados com sucesso.");
       }
       catch (Exception e)
       {
-        return new BadRequestObjectResult(e);
+        return Retorno.Excecao(e, "Erro ao processar a solicitação.");
       }
-    }
-
-    public async Task<bool> UserIsAdminOrManager(string hotelId, string userEmail)
-    {
-      var userId = _context.Usuarios
-          .Where(u => u.Email == userEmail)
-          .Select(x => x.Id)
-          .FirstOrDefault();
-      
-      if (userId == Guid.Empty)
-        return false;
-
-      var hotelGuid = Guid.Parse(hotelId);
-
-      var user = await _context.UsuarioPermissao.FirstOrDefaultAsync(x => x.UserModelId == userId && x.DetalhesModelId == hotelGuid);
-
-      bool userIsAdmin = user?.Role == RoleUserModel.Admin || user?.Role == RoleUserModel.Manager || user?.Role == RoleUserModel.Turify;
-
-      return userIsAdmin;
     }
   }
 }

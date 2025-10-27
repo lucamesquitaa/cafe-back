@@ -34,7 +34,13 @@ var passSecreta = "pass-hotelariadb";
 
 // var connectionString = "Host=34.46.28.173;Port=5432;Database=hotelariadb;Username=postgres;Password=X(y4M&.}@Mes6TZJ";
 
-var connectionString = "Host=localhost;Port=5432;Database=hotelariadb;Username=lucam;Password=X(y4M&.}@Mes6TZJ";
+// Prefer an explicit connection string from configuration (appsettings.*.json) or environment variable
+
+   var dbHost = Environment.GetEnvironmentVariable("DB_HOST") ?? "localhost";
+    var dbUser = Environment.GetEnvironmentVariable("DB_USER") ?? "lucam";
+    var dbPass = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "X(y4M&.}@Mes6TZJ";
+    var connectionString = $"Host={dbHost};Port=5432;Database=hotelariadb;Username={dbUser};Password={dbPass}";
+
 
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 
@@ -64,6 +70,7 @@ builder.Services.AddSingleton<IRabbitMqProducer>(sp =>
     ));
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<GoogleAuthService>();
+builder.Services.AddSingleton<IRetorno, Retorno>();
 
 var jwtToken = Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("jwttoken", ""));
 

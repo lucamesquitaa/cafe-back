@@ -6,11 +6,11 @@ using System.IdentityModel.Tokens.Jwt;
 
 namespace SaudeIA.Facades.Interfaces
 {
-  public interface IUserFacade
+  public interface IUserFacade : IRetorno
   {
-    public Task<IActionResult> LoginAndRegisterGoogle(UserGoogleDTO userGoogle);
-    public Task<IEnumerable<GetAllManagers>> GetAllPermissionUsers(string hotelId);
-    public Task<IActionResult> UpdatePermissionUsers(string hotelId, string emails);
+    public Task<IRetorno<UserModel>> LoginAndRegisterGoogle(UserGoogleDTO userGoogle);
+    public Task<IRetorno<IEnumerable<GetAllManagers>>> GetAllPermissionUsers(string hotelId);
+    public Task<IRetorno> UpdatePermissionUsers(string hotelId, string emails);
 
   }
 }

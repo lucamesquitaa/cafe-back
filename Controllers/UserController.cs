@@ -36,34 +36,37 @@ namespace SaudeIA.Controllers
     {
       var result = await _userFacade.LoginAndRegisterGoogle(userGoogle);
 
-      if (result is OkObjectResult okResult && okResult.Value is UserModel user && !string.IsNullOrEmpty(user.Email))
+      if (result != null && result.Data != null && !string.IsNullOrEmpty(result.Data.Email))
       {
-        var token = GenerateJwtToken(user.Email, RoleUserModel.User);
+        var token = GenerateJwtToken(result.Data.Email, RoleUserModel.User);
         return Ok(new { token = token });
       }
 
       return Unauthorized("Token de login expirado.");
     }
 
-    //[Authorize(Roles = RoleUserModel.Turify)]
-    //[HttpPost("UpdateAdmin")]
-    //public async Task<IActionResult> UpdateAdmin([FromBody] string email)
-    //{
-    //  return await _userFacade.UpdateRoleUser(email);
-    //}
-
     [AllowAnonymous]
     [HttpPost("GetAllPermissionUsers")]
-    public async Task<IEnumerable<GetAllManagers>> GetAllPermissionUsers(hotelIdObj obj)
+    public async Task<IActionResult> GetAllPermissionUsers([FromBody] hotelIdObj obj)
     {
-      return await _userFacade.GetAllPermissionUsers(obj.HotelId);
+       var result = await _userFacade.GetAllPermissionUsers(obj.HotelId);
+
+      if (result.Sucesso == false)
+        return BadRequest(result);
+      else
+        return Ok(result);
     }
 
     [AllowAnonymous]
     [HttpPost("UpdateManager")]
-    public async Task<IActionResult> UpdateManager(ObjSetManager obj)
+    public async Task<IActionResult> UpdateManager([FromBody] ObjSetManager obj)
     {
-      return await _userFacade.UpdatePermissionUsers(obj.HotelId, obj.Email);
+      var result = await _userFacade.UpdatePermissionUsers(obj.HotelId, obj.Email);
+
+      if(result.Sucesso == false)
+        return BadRequest(result);
+      else
+        return Ok(result);
     }
 
     private string GenerateJwtToken(string email, string? role)
@@ -74,7 +77,7 @@ namespace SaudeIA.Controllers
         new Claim(JwtRegisteredClaimNames.Sub, email),
         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
         new Claim(ClaimTypes.Role, role)
-    };
+      };
 
       var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetValue("JwtToken", "")));
       var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
