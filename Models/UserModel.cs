@@ -15,5 +15,10 @@ namespace SaudeIA.Models
     public string? Photo { get; set; }
     public IEnumerable<UsuarioPermissoes> Permissions { get; set; } = new List<UsuarioPermissoes>();
     public DateTime Created { get; set; } = DateTime.UtcNow;
+
+    public static implicit operator Task<object>(UserModel v)
+    {
+      throw new NotImplementedException();
+    }
   }
 }

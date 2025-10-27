@@ -1,12 +1,4 @@
-﻿using BCrypt.Net;
-using Google.Apis.Auth;
-using Google.Cloud.SecretManager.V1;
-using Microsoft.AspNetCore.Authentication.Google;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Graph;
+﻿using Microsoft.EntityFrameworkCore;
 using SaudeIA.Data;
 using SaudeIA.Facades.Interfaces;
 using SaudeIA.Models;
@@ -19,24 +11,31 @@ using System.Security.Claims;
 
 namespace SaudeIA.Facades
 {
-  public class UserFacade : IUserFacade
+  public class UserFacade : IUserFacade, IRetorno
   {
     private readonly Context _context;
     private readonly GoogleAuthService _googleAuthService;
-    
-    public UserFacade(Context context, GoogleAuthService googleAuthService)
+    private UtilsFacade _utilsFacade ;
+
+    public UserFacade(Context context, GoogleAuthService googleAuthService, UtilsFacade utilsFacade)
     {
       _context = context;
       _googleAuthService = googleAuthService;
+      _utilsFacade = utilsFacade;
     }
 
-    public async Task<IActionResult> LoginAndRegisterGoogle(UserGoogleDTO userGoogle)
+    // Implementation of IRetorno properties  
+    public bool Sucesso { get; private set; }
+    public string? Mensagem { get; private set; }
+    public string? ExcecaoMensagem { get; private set; }
+    public object? Data { get; private set; }
+
+    public async Task<IRetorno<UserModel>> LoginAndRegisterGoogle(UserGoogleDTO userGoogle)
     {
       try
       {
-
         if (userGoogle == null)
-          return new UnauthorizedObjectResult("Token inválido.");
+          return Retorno<UserModel>.Erro("Token inválido.");
 
         var googleId = userGoogle.Id;
         var email = userGoogle.Email;
@@ -44,7 +43,7 @@ namespace SaudeIA.Facades
         var lastName = userGoogle.LastName;
         var picture = userGoogle.Photo;
 
-        var user = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == email);
+        var user = await _utilsFacade.GetUserByEmail(email);
 
         if (user == null)
         {
@@ -61,102 +60,87 @@ namespace SaudeIA.Facades
           await _context.SaveChangesAsync();
         }
 
-        return new OkObjectResult(user);
+        return Retorno<UserModel>.Ok(user, "Login ou registro realizado com sucesso.");
       }
       catch (Exception e)
       {
-        return null;
+        return Retorno<UserModel>.Excecao(e, "Erro ao processar a solicitação.");
       }
     }
 
-    public async Task<IEnumerable<GetAllManagers>> GetAllPermissionUsers(string hotelId)
+    public async Task<IRetorno<IEnumerable<GetAllManagers>>> GetAllPermissionUsers(string hotelId)
     {
       try
       {
         var userEmail = _googleAuthService.GetUserEmailFromToken();
 
         if (string.IsNullOrEmpty(userEmail))
-          return null;
+          return Retorno<IEnumerable<GetAllManagers>>.Erro("Erro ao buscar usuário.");
 
-        // Fix: Use FirstOrDefaultAsync to retrieve a single value instead of IQueryable
-        var userId = await _context.Usuarios
-            .Where(u => u.Email == userEmail)
-            .Select(x => x.Id)
-            .FirstOrDefaultAsync();
+        var user = await _utilsFacade.GetUserByEmail(userEmail);
 
-        if (userId == Guid.Empty)
-          return null;
+        if (user == null || user.Id == Guid.Empty)
+          return Retorno<IEnumerable<GetAllManagers>>.Erro("Erro ao buscar usuário.");
 
         var hotel = await _context.Hotel.FirstOrDefaultAsync(u => u.Id.ToString() == hotelId);
+
         if (hotel == null)
-        {
-          return null;
-        }
+          return Retorno<IEnumerable<GetAllManagers>>.Erro("Erro ao buscar hotel.");
 
-        var userIsAdmin = await _context.UsuarioPermissao
-            .FirstOrDefaultAsync(x => x.UserModelId == userId && x.DetalhesModelId == Guid.Parse(hotelId) &&
-                                      (x.Role == RoleUserModel.Manager || x.Role == RoleUserModel.Admin || x.Role == RoleUserModel.Turify));
+        var userIsAdmin = await _utilsFacade.IsAdminOrManager(user.Id.ToString(), hotelId);
 
-        if (userIsAdmin == null)
-          return null;
+        if (!userIsAdmin)
+          return Retorno<IEnumerable<GetAllManagers>>.Erro("Usuário não possui permissão para acessar esta informação.");
 
-        var users = await _context.UsuarioPermissao.Where(u => u.DetalhesModelId == Guid.Parse(hotelId)).Select(x => new GetAllManagers { Email = x.UserModelEmail, Role = x.Role}).ToListAsync();
+        var usersLinkedHoteis = await _context.UsuarioPermissao
+          .Where(u => u.DetalhesModelId == Guid.Parse(hotelId))
+          .Select(x => new GetAllManagers { Email = x.UserModelEmail, Role = x.Role })
+          .ToListAsync();
 
-
-        if (users == null)
-          return null;
-        
-        return users;
+        return Retorno<IEnumerable<GetAllManagers>>.Ok(usersLinkedHoteis, "Lista de usuários com permissão obtida com sucesso.");
       }
       catch (Exception e)
       {
-        return null;
+        return Retorno<IEnumerable<GetAllManagers>>.Excecao(e, "Erro ao processar a solicitação.");
       }
     }
 
-    public async Task<IActionResult> UpdatePermissionUsers(string hotelId, string email)
+    public async Task<IRetorno> UpdatePermissionUsers(string hotelId, string email)
     {
       try
       {
         var userEmail = _googleAuthService.GetUserEmailFromToken();
 
         if (string.IsNullOrEmpty(userEmail))
-          return new UnauthorizedObjectResult("Token inválido.");
+          return Retorno.Erro("Token inválido de e-mail.");
 
-        // Fix: Use FirstOrDefaultAsync to retrieve a single value instead of IQueryable
-        var userId = await _context.Usuarios
-            .Where(u => u.Email == userEmail)
-            .Select(x => x.Id)
-            .FirstOrDefaultAsync();
+        var user = await _utilsFacade.GetUserByEmail(userEmail);
 
-        if (userId == Guid.Empty)
-          return new UnauthorizedObjectResult("Usuário não encontrado.");
+        if (user == null || user.Id == Guid.Empty)
+          return Retorno.Erro("Usuário não encontrado.");
 
-        var hotel = await _context.Hotel.FirstOrDefaultAsync(u => u.Id.ToString() == hotelId);
+        var hotelGuid = Guid.Parse(hotelId);
+
+        var hotel = await _context.Hotel.FirstOrDefaultAsync(u => u.Id == hotelGuid);
+
         if (hotel == null)
+          return Retorno.Erro("Hotel não encontrado.");
+
+        var userIsAdmin = await _utilsFacade.IsAdminOrManager(user.Id.ToString(), hotelId);
+
+        if (!userIsAdmin)
+          return Retorno.Erro("Permissão do usuário não é admin deste hotel.");
+
+        var userManager = await _utilsFacade.GetUserByEmail(email);
+
+        if (userManager == null)
+          return Retorno.Erro($"Usuário {email} não encontrado.");
+
+        var isUserManagerAlready = await _utilsFacade.IsAdminOrManager(userManager.Id.ToString(), hotelId);
+
+        if (!isUserManagerAlready)
         {
-          return new BadRequestObjectResult("Hotel não encontrado.");
-        }
-
-        var userIsAdmin = await _context.UsuarioPermissao
-            .FirstOrDefaultAsync(x => x.UserModelId == userId && x.DetalhesModelId == Guid.Parse(hotelId) &&
-                                      (x.Role == RoleUserModel.Admin || x.Role == RoleUserModel.Turify));
-
-        if (userIsAdmin == null)
-          return new BadRequestObjectResult("Permissão do usuário não é admin deste hotel.");
-
-        var newRole = "";
-
-        var user = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == email);
-        if (user == null)
-          return new NotFoundObjectResult($"Usuário {email} não encontrado.");
-
-        var isManagerAlready = await _context.UsuarioPermissao
-            .FirstOrDefaultAsync(x => x.UserModelId == user.Id && x.DetalhesModelId == Guid.Parse(hotelId));
-
-        if (isManagerAlready == null)
-        {
-          newRole = RoleUserModel.Manager;
+          var newRole = RoleUserModel.Manager;
 
           var permissions = new UsuarioPermissoes
           {
@@ -167,19 +151,14 @@ namespace SaudeIA.Facades
             Role = newRole
           };
           await _context.UsuarioPermissao.AddAsync(permissions);
-        }
-        else
-        {
-          _context.UsuarioPermissao.Remove(isManagerAlready);
+          await _context.SaveChangesAsync();
         }
 
-        await _context.SaveChangesAsync();
-
-        return new OkResult();
+        return Retorno.Ok($"Permissão do usuario {email} atualizada com sucesso.");
       }
       catch (Exception e)
       {
-        return null;
+        return Retorno.Excecao(e, "Erro ao processar a solicitação.");
       }
     }
   }

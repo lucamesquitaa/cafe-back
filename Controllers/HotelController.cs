@@ -9,10 +9,6 @@ using SaudeIA.Data;
 using SaudeIA.Facades;
 using SaudeIA.Facades.Interfaces;
 using SaudeIA.Models;
-using SaudeIA.Models.DTOs;
-using SaudeIA.Models.Enums;
-using System.Data;
-using System.Text.Json;
 
 namespace SaudeIA.Controllers
 {
@@ -33,11 +29,12 @@ namespace SaudeIA.Controllers
     [HttpGet()]
     public async Task<IActionResult> GetAll()
     {
-      var hoteis = await _hotelFacade.GetAllFacade();
-      if (hoteis == null)
-        return BadRequest();
+      var retorno = await _hotelFacade.GetAllFacade();
 
-      return Ok(hoteis);
+      if (retorno.Sucesso == false)
+        return BadRequest(retorno);
+      else
+        return Ok(retorno);
     }
 
 
@@ -46,11 +43,12 @@ namespace SaudeIA.Controllers
     [HttpGet("{hotelId}")]
     public async Task<IActionResult> Get(string hotelId)
     {
-      var hotel = await _hotelFacade.GetDetalhesFacade(hotelId);
-      if (hotel == null)
-        return BadRequest();
+      var retorno = await _hotelFacade.GetDetalhesFacade(hotelId);
 
-      return Ok(hotel);
+      if (retorno.Sucesso == false)
+        return BadRequest(retorno);
+      else
+        return Ok(retorno);
     }
 
     // GET: api/<ValuesController>
@@ -58,11 +56,12 @@ namespace SaudeIA.Controllers
     [HttpGet("ByManager/{hotelId}")]
     public async Task<IActionResult> GetByManager(string hotelId)
     {
-      var hotel = await _hotelFacade.GetDetalhesFacadeByManager(hotelId);
-      if (hotel == null)
-        return BadRequest();
+      var retorno = await _hotelFacade.GetDetalhesFacadeByManager(hotelId);
 
-      return Ok(hotel);
+      if (retorno.Sucesso == false)
+        return BadRequest(retorno);
+      else
+        return Ok(retorno);
     }
 
     // GET: api/<ValuesController>
@@ -70,11 +69,12 @@ namespace SaudeIA.Controllers
     [HttpGet("ByUserId")]
     public async Task<IActionResult> GetByUserId()
     {
-      var hotel = await _hotelFacade.GetDetalhesUserFacade();
-      if (hotel == null)
-        return BadRequest();
-
-      return Ok(hotel);
+      var retorno = await _hotelFacade.GetDetalhesUserFacade();
+        
+      if (retorno.Sucesso == false)
+        return BadRequest(retorno);
+      else
+        return Ok(retorno);
     }
 
     // POST api/<ValuesController>
@@ -82,7 +82,12 @@ namespace SaudeIA.Controllers
     [HttpPost()]
     public async Task<IActionResult> Post([FromBody] DetalhesModel obj)
     {
-      return await _hotelFacade.PostDetalhesFacade(obj);
+      var retorno = await _hotelFacade.PostDetalhesFacade(obj);
+
+      if (retorno.Sucesso == false)
+        return BadRequest(retorno);
+      else
+        return Ok(retorno);
     }
 
     // PUT api/<ValuesController>
@@ -90,7 +95,12 @@ namespace SaudeIA.Controllers
     [HttpPut("{hotelId}")]
     public async Task<IActionResult> Put([FromBody] DetalhesModel obj, string hotelId)
     {
-      return await _hotelFacade.PutDetalhesFacade(obj, hotelId);
+      var retorno = await _hotelFacade.PutDetalhesFacade(obj, hotelId);
+
+      if (retorno.Sucesso == false)
+        return BadRequest(retorno);
+      else
+        return Ok(retorno);
     }
 
     [AllowAnonymous]
@@ -100,10 +110,13 @@ namespace SaudeIA.Controllers
       if (file == null || file.Length == 0)
         return BadRequest("Arquivo inválido.");
 
-      var hotel = await _hotelFacade.GetDetalhesFacade(hotelId);
+      var retorno = await _hotelFacade.GetDetalhesFacade(hotelId);
+
+      if (retorno.Sucesso == false)
+        return BadRequest(retorno);   
 
       var bucketName = "hotelaria-imgs";
-      var objetoNome = $"{hotel.Name}/{file.FileName}_{Guid.NewGuid()}";
+      var objetoNome = $"{retorno.Data.Name}/{file.FileName}_{Guid.NewGuid()}";
       // Busca o segredo no Secret Manager
       //HOMOLOG
       //var secretClient = await SecretManagerServiceClient.CreateAsync();
@@ -134,7 +147,12 @@ namespace SaudeIA.Controllers
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(string id)
     {
-      return await _hotelFacade.DeleteDetalhesFacade(id);
+      var retorno = await _hotelFacade.DeleteDetalhesFacade(id);
+
+      if (retorno.Sucesso == false)
+        return BadRequest(retorno);
+      else
+        return Ok(retorno);
     }
   }
 }

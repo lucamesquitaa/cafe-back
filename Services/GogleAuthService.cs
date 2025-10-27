@@ -1,5 +1,6 @@
 ﻿using Google.Apis.Auth;
 using Microsoft.AspNetCore.Mvc;
+using SaudeIA.Models.Enums;
 using System.IdentityModel.Tokens.Jwt;
 
 namespace SaudeIA.Services
@@ -58,5 +59,4 @@ namespace SaudeIA.Services
       return null;
     }
   }
-
 }
