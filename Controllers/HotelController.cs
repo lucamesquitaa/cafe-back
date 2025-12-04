@@ -31,7 +31,9 @@ namespace SaudeIA.Controllers
     {
       var retorno = await _hotelFacade.GetAllFacade();
 
-      if (retorno.Sucesso == false)
+      if (retorno.Sucesso == false && !string.IsNullOrEmpty(retorno.ExcecaoMensagem))
+        return StatusCode(500, retorno);
+      else if(retorno.Sucesso == false && string.IsNullOrEmpty(retorno.ExcecaoMensagem))
         return BadRequest(retorno);
       else
         return Ok(retorno);
@@ -39,7 +41,7 @@ namespace SaudeIA.Controllers
 
 
     // GET: api/<ValuesController>
-    [AllowAnonymous]
+    [Authorize]
     [HttpGet("{hotelId}")]
     public async Task<IActionResult> Get(string hotelId)
     {
@@ -52,7 +54,7 @@ namespace SaudeIA.Controllers
     }
 
     // GET: api/<ValuesController>
-    [AllowAnonymous]
+    [Authorize]
     [HttpGet("ByManager/{hotelId}")]
     public async Task<IActionResult> GetByManager(string hotelId)
     {
@@ -65,7 +67,7 @@ namespace SaudeIA.Controllers
     }
 
     // GET: api/<ValuesController>
-    [AllowAnonymous]
+    [Authorize]
     [HttpGet("ByUserId")]
     public async Task<IActionResult> GetByUserId()
     {
@@ -78,7 +80,7 @@ namespace SaudeIA.Controllers
     }
 
     // POST api/<ValuesController>
-    [AllowAnonymous]
+    [Authorize]
     [HttpPost()]
     public async Task<IActionResult> Post([FromBody] DetalhesModel obj)
     {
@@ -91,7 +93,7 @@ namespace SaudeIA.Controllers
     }
 
     // PUT api/<ValuesController>
-    [AllowAnonymous]
+    [Authorize]
     [HttpPut("{hotelId}")]
     public async Task<IActionResult> Put([FromBody] DetalhesModel obj, string hotelId)
     {
@@ -103,7 +105,7 @@ namespace SaudeIA.Controllers
         return Ok(retorno);
     }
 
-    [AllowAnonymous]
+    [Authorize]
     [HttpPost("{hotelId}/fotos")]
     public async Task<IActionResult> PostFotos(IFormFile file, string hotelId)
     {
@@ -143,7 +145,7 @@ namespace SaudeIA.Controllers
     }
 
     // DELETE api/<ValuesController>/5
-    [AllowAnonymous]
+    [Authorize]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(string id)
     {

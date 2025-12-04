@@ -7,11 +7,23 @@ namespace SaudeIA.Models
   {
     [Key]
     public Guid Id { get; set; } = Guid.NewGuid();
-    [ForeignKey("UserModelId")]
+
+    // FK para UserModel
     public Guid UserModelId { get; set; }
-    public string UserModelEmail { get; set; } = String.Empty;
-    [ForeignKey("DetalhesModelId")]
+
+    [ForeignKey(nameof(UserModelId))]
+    public UserModel? User { get; set; }
+
+    // Email armazenado (opcional, mas consistente com o nome)
+    public string UserModelEmail { get; set; } = string.Empty;
+
+    // FK para DetalhesModel (se aplicável)
     public Guid DetalhesModelId { get; set; }
-    public string Role { get; set; } = String.Empty;
+
+    [ForeignKey(nameof(DetalhesModelId))]
+    public DetalhesModel? Detalhes { get; set; }
+
+    // Papel/role do usuário para o detalhe
+    public string Role { get; set; } = string.Empty;
   }
 }

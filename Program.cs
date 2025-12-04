@@ -16,10 +16,6 @@ using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Create the client.
-var projectId = "just-stock-461116-u2";
-var connString = "connectionstring";
-var passSecreta = "pass-hotelariadb";
 //HOMOLOG
 // 🔐 Acessa o segredo na inicialização da aplicação
 //var secretClient = SecretManagerServiceClient.Create();
@@ -35,12 +31,9 @@ var passSecreta = "pass-hotelariadb";
 // var connectionString = "Host=34.46.28.173;Port=5432;Database=hotelariadb;Username=postgres;Password=X(y4M&.}@Mes6TZJ";
 
 // Prefer an explicit connection string from configuration (appsettings.*.json) or environment variable
-
-   var dbHost = Environment.GetEnvironmentVariable("DB_HOST") ?? "localhost";
-    var dbUser = Environment.GetEnvironmentVariable("DB_USER") ?? "lucam";
-    var dbPass = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "X(y4M&.}@Mes6TZJ";
-    var connectionString = $"Host={dbHost};Port=5432;Database=hotelariadb;Username={dbUser};Password={dbPass}";
-
+var dbHost = "localhost";
+var dbUser = "lucam";
+var dbPass = "Xy4MMes6TZj";
 
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 
@@ -62,6 +55,9 @@ builder.Services.AddHttpContextAccessor();
 // Serviços
 builder.Services.AddTransient<UserFacade>();
 builder.Services.AddTransient<HotelFacade>();
+builder.Services.AddTransient<QuartosFacade>();
+builder.Services.AddTransient<CategoryQuartosFacade>();
+builder.Services.AddTransient<UtilsFacade>();
 // Registrar o Producer como singleton ou scoped
 builder.Services.AddSingleton<IRabbitMqProducer>(sp =>
     new RabbitMQProducer(
@@ -70,13 +66,13 @@ builder.Services.AddSingleton<IRabbitMqProducer>(sp =>
     ));
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<GoogleAuthService>();
-builder.Services.AddSingleton<IRetorno, Retorno>();
-
-var jwtToken = Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("jwttoken", ""));
-
+var connectionString = "Host=postgres_local;Port=5432;Database=hotelariadb;Username=lucam;Password=Xy4MMes6TZj";
 builder.Services.AddDbContext<SaudeIA.Data.Context>(options =>
     options.UseNpgsql(connectionString)
 );
+
+
+var jwtToken = Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("jwttoken", ""));
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -134,7 +130,7 @@ builder.Services.AddSwaggerGen(c =>
     Scheme = "Bearer"
   });
 
-  // Adiciona o requisito de seguran�a
+  // Adiciona o requisito de segurança
   c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -153,6 +149,12 @@ builder.Services.AddSwaggerGen(c =>
 
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+  var context = scope.ServiceProvider.GetRequiredService<SaudeIA.Data.Context>();
+  context.Database.Migrate();
+}
 
 app.Use(async (context, next) =>
 {
