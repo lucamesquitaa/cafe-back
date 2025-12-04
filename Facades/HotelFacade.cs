@@ -106,14 +106,16 @@ namespace SaudeIA.Facades
         if (string.IsNullOrEmpty(userEmail))
           return Retorno<DetalhesModel>.Erro("Usuario não tem permissão para executar esta ação.");
 
-        var user = _utilsFacade.GetUserByEmail(userEmail);
+        var user = await _utilsFacade.GetUserByEmail(userEmail);
 
-        bool userHasPerm = await _utilsFacade.IsAdminOrManager(user.Id.ToString(), hotelId);
+        var hotelIdGuid = Guid.Parse(hotelId);
+
+        bool userHasPerm = await _utilsFacade.IsAdminOrManager(user.Id, hotelIdGuid);
 
         if (!userHasPerm)
           return Retorno<DetalhesModel>.Erro("O usuário não tem permissão para executar esta ação.");
 
-        var hotel = await _context.Hotel.Where(u => u.Id.ToString() == hotelId)
+        var hotel = await _context.Hotel.Where(u => u.Id == hotelIdGuid)
                                         .AsNoTracking()
                                         .FirstOrDefaultAsync();
 
@@ -191,6 +193,7 @@ namespace SaudeIA.Facades
           Role = RoleUserModel.Admin
         };
 
+        // Added personal/internal fields to hotelNew creation
         var hotelNew = new DetalhesModel
         {
           Id = novoId,
@@ -202,7 +205,7 @@ namespace SaudeIA.Facades
           Category = hotel.Category,
           Child = hotel.Child,
           Pets = hotel.Pets,
-          PetsTax = hotel.PetsTax ?? 0,
+          PetsTax = hotel.PetsTax ??0,
           Cep = hotel.Cep,
           Address = hotel.Address,
           Number = hotel.Number,
@@ -219,6 +222,14 @@ namespace SaudeIA.Facades
           Swimming = hotel.Swimming ?? false,
           Cleaning = hotel.Cleaning ?? false,
           Gym = hotel.Gym ?? false,
+
+          // Personal/internal fields added
+          Cnpj = hotel.Cnpj,
+          Razao = hotel.Razao,
+          NomeRep = hotel.NomeRep,
+          TelRep = hotel.TelRep,      
+          CpfRep = hotel.CpfRep,
+          EmailRep = hotel.EmailRep,
         };
 
         await _context.Hotel.AddAsync(hotelNew);
@@ -249,7 +260,9 @@ namespace SaudeIA.Facades
         if (user == null || user.Id == Guid.Empty)
           return Retorno.Erro("Usuário não encontrado - id.");
 
-        bool userHasPerm = await _utilsFacade.IsAdminOrManager(user.Id.ToString(), userEmail);
+        var hotelIdGuid = Guid.Parse(id);
+
+        bool userHasPerm = await _utilsFacade.IsAdminOrManager(user.Id, hotelIdGuid);
 
         if (!userHasPerm)
           return Retorno.Erro("Permissão do usuário não é admin/gerente deste hotel.");
@@ -320,12 +333,14 @@ namespace SaudeIA.Facades
         if (user == null || user.Id == Guid.Empty)
           return Retorno.Erro("Usuário não encontrado - id.");
 
-        bool userHasPerm = await _utilsFacade.IsAdminOrManager(user.Id.ToString(), userEmail);
+        var idGuid = Guid.Parse(id);
+
+        bool userHasPerm = await _utilsFacade.IsAdminOrManager(user.Id, idGuid);
 
         if (!userHasPerm)
           return Retorno.Erro("Permissão do usuário não é admin/gerente deste hotel.");
 
-        var hotel = await _context.Hotel.Where(u => u.Id.ToString() == id).FirstOrDefaultAsync();
+        var hotel = await _context.Hotel.Where(u => u.Id == idGuid).FirstOrDefaultAsync();
 
         if (hotel == null)
           return Retorno.Erro("Hotel não encontrada.");

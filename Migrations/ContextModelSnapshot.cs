@@ -22,15 +22,11 @@ namespace SaudeIA.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("SaudeIA.Models.ContatosModel", b =>
+            modelBuilder.Entity("SaudeIA.Models.CategoryQuarto", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
-
-                    b.Property<string>("Contact")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<Guid>("DetalhesModelId")
                         .HasColumnType("uuid");
@@ -39,11 +35,76 @@ namespace SaudeIA.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int?>("Number")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("QuartosModelId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("DetalhesModelId");
 
+                    b.HasIndex("QuartosModelId");
+
+                    b.ToTable("CategoryQuarto");
+                });
+
+            modelBuilder.Entity("SaudeIA.Models.ContatosModel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Contact")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid?>("DetalhesId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("DetalhesModelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("DetalhesModelId1")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DetalhesId");
+
+                    b.HasIndex("DetalhesModelId");
+
                     b.ToTable("Contacts");
+                });
+
+            modelBuilder.Entity("SaudeIA.Models.DTOs.BedsDTO", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("QuartosModelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuartosModelId");
+
+                    b.ToTable("BedsDTO");
                 });
 
             modelBuilder.Entity("SaudeIA.Models.DetalhesModel", b =>
@@ -174,7 +235,22 @@ namespace SaudeIA.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("DetalhesId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("DetalhesModelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("DetalhesModelId1")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("QuartosId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("QuartosModelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("QuartosModelId1")
                         .HasColumnType("uuid");
 
                     b.Property<bool?>("Stared")
@@ -186,9 +262,92 @@ namespace SaudeIA.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("DetalhesId");
+
                     b.HasIndex("DetalhesModelId");
 
+                    b.HasIndex("QuartosId");
+
+                    b.HasIndex("QuartosModelId");
+
                     b.ToTable("Photos");
+                });
+
+            modelBuilder.Entity("SaudeIA.Models.QuartosModel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AreaSize")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("BathProducts")
+                        .HasColumnType("text");
+
+                    b.Property<bool?>("Bathroom")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool?>("Cleaning")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool?>("Coffee")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("DetalhesModelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Diff")
+                        .HasColumnType("text");
+
+                    b.Property<bool?>("Freeze")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool?>("Fridge")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("MaxOcupation")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool?>("Refund")
+                        .HasColumnType("boolean");
+
+                    b.Property<string[]>("Tags")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<bool?>("Telephone")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool?>("Tv")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("TypeTv")
+                        .HasColumnType("text");
+
+                    b.Property<bool?>("Varanda")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool?>("Vault")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool?>("Wifi")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DetalhesModelId");
+
+                    b.ToTable("Quartos");
                 });
 
             modelBuilder.Entity("SaudeIA.Models.UserModel", b =>
@@ -228,12 +387,21 @@ namespace SaudeIA.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("DetalhesId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("DetalhesModelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("DetalhesModelId1")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("UserModelEmail")
                         .IsRequired()
@@ -242,46 +410,122 @@ namespace SaudeIA.Migrations
                     b.Property<Guid>("UserModelId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("UserModelId1")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("DetalhesId");
+
                     b.HasIndex("DetalhesModelId");
+
+                    b.HasIndex("UserId");
 
                     b.HasIndex("UserModelId");
 
                     b.ToTable("UsuarioPermissao");
                 });
 
+            modelBuilder.Entity("SaudeIA.Models.CategoryQuarto", b =>
+                {
+                    b.HasOne("SaudeIA.Models.DetalhesModel", "Detalhes")
+                        .WithMany()
+                        .HasForeignKey("DetalhesModelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SaudeIA.Models.QuartosModel", null)
+                        .WithMany("Category")
+                        .HasForeignKey("QuartosModelId");
+
+                    b.Navigation("Detalhes");
+                });
+
             modelBuilder.Entity("SaudeIA.Models.ContatosModel", b =>
                 {
+                    b.HasOne("SaudeIA.Models.DetalhesModel", "Detalhes")
+                        .WithMany()
+                        .HasForeignKey("DetalhesId");
+
                     b.HasOne("SaudeIA.Models.DetalhesModel", null)
                         .WithMany("Contacts")
                         .HasForeignKey("DetalhesModelId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Detalhes");
+                });
+
+            modelBuilder.Entity("SaudeIA.Models.DTOs.BedsDTO", b =>
+                {
+                    b.HasOne("SaudeIA.Models.QuartosModel", null)
+                        .WithMany("Beds")
+                        .HasForeignKey("QuartosModelId");
                 });
 
             modelBuilder.Entity("SaudeIA.Models.FotosDetalhesModel", b =>
                 {
+                    b.HasOne("SaudeIA.Models.DetalhesModel", "Detalhes")
+                        .WithMany()
+                        .HasForeignKey("DetalhesId");
+
                     b.HasOne("SaudeIA.Models.DetalhesModel", null)
                         .WithMany("Photos")
                         .HasForeignKey("DetalhesModelId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("SaudeIA.Models.QuartosModel", "Quartos")
+                        .WithMany()
+                        .HasForeignKey("QuartosId");
+
+                    b.HasOne("SaudeIA.Models.QuartosModel", null)
+                        .WithMany("Photos")
+                        .HasForeignKey("QuartosModelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Detalhes");
+
+                    b.Navigation("Quartos");
+                });
+
+            modelBuilder.Entity("SaudeIA.Models.QuartosModel", b =>
+                {
+                    b.HasOne("SaudeIA.Models.DetalhesModel", "Detalhes")
+                        .WithMany("Quartos")
+                        .HasForeignKey("DetalhesModelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Detalhes");
                 });
 
             modelBuilder.Entity("SaudeIA.Models.UsuarioPermissoes", b =>
                 {
+                    b.HasOne("SaudeIA.Models.DetalhesModel", "Detalhes")
+                        .WithMany()
+                        .HasForeignKey("DetalhesId");
+
                     b.HasOne("SaudeIA.Models.DetalhesModel", null)
                         .WithMany("Permissions")
                         .HasForeignKey("DetalhesModelId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("SaudeIA.Models.UserModel", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
 
                     b.HasOne("SaudeIA.Models.UserModel", null)
                         .WithMany("Permissions")
                         .HasForeignKey("UserModelId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Detalhes");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("SaudeIA.Models.DetalhesModel", b =>
@@ -289,6 +533,17 @@ namespace SaudeIA.Migrations
                     b.Navigation("Contacts");
 
                     b.Navigation("Permissions");
+
+                    b.Navigation("Photos");
+
+                    b.Navigation("Quartos");
+                });
+
+            modelBuilder.Entity("SaudeIA.Models.QuartosModel", b =>
+                {
+                    b.Navigation("Beds");
+
+                    b.Navigation("Category");
 
                     b.Navigation("Photos");
                 });

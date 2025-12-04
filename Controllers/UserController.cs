@@ -69,6 +69,18 @@ namespace SaudeIA.Controllers
         return Ok(result);
     }
 
+    [AllowAnonymous]
+    [HttpDelete("RemovePermissionUsers")]
+    public async Task<IActionResult> RemovePermissionUsers([FromBody] ObjSetManager obj)
+    {
+      var result = await _userFacade.RemovePermissionUsers(obj.HotelId, obj.Email);
+
+      if (result.Sucesso == false)
+        return BadRequest(result);
+      else
+        return Ok(result);
+    }
+
     private string GenerateJwtToken(string email, string? role)
     {
       role = !string.IsNullOrEmpty(role) ? role : RoleUserModel.User;

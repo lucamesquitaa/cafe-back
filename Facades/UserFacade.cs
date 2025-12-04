@@ -82,18 +82,20 @@ namespace SaudeIA.Facades
         if (user == null || user.Id == Guid.Empty)
           return Retorno<IEnumerable<GetAllManagers>>.Erro("Erro ao buscar usuário.");
 
-        var hotel = await _context.Hotel.FirstOrDefaultAsync(u => u.Id.ToString() == hotelId);
+        var hotelIdGuid = Guid.Parse(hotelId);
+
+        var hotel = await _context.Hotel.FirstOrDefaultAsync(u => u.Id == hotelIdGuid);
 
         if (hotel == null)
           return Retorno<IEnumerable<GetAllManagers>>.Erro("Erro ao buscar hotel.");
 
-        var userIsAdmin = await _utilsFacade.IsAdminOrManager(user.Id.ToString(), hotelId);
+        var userIsAdmin = await _utilsFacade.IsAdminOrManager(user.Id, hotelIdGuid);
 
         if (!userIsAdmin)
           return Retorno<IEnumerable<GetAllManagers>>.Erro("Usuário não possui permissão para acessar esta informação.");
 
         var usersLinkedHoteis = await _context.UsuarioPermissao
-          .Where(u => u.DetalhesModelId == Guid.Parse(hotelId))
+          .Where(u => u.DetalhesModelId == hotelIdGuid)
           .Select(x => new GetAllManagers { Email = x.UserModelEmail, Role = x.Role })
           .ToListAsync();
 
@@ -119,14 +121,14 @@ namespace SaudeIA.Facades
         if (user == null || user.Id == Guid.Empty)
           return Retorno.Erro("Usuário não encontrado.");
 
-        var hotelGuid = Guid.Parse(hotelId);
+        var hotelIdGuid = Guid.Parse(hotelId);
 
-        var hotel = await _context.Hotel.FirstOrDefaultAsync(u => u.Id == hotelGuid);
+        var hotel = await _context.Hotel.FirstOrDefaultAsync(u => u.Id == hotelIdGuid);
 
         if (hotel == null)
           return Retorno.Erro("Hotel não encontrado.");
 
-        var userIsAdmin = await _utilsFacade.IsAdminOrManager(user.Id.ToString(), hotelId);
+        var userIsAdmin = await _utilsFacade.IsAdminOrManager(user.Id, hotelIdGuid);
 
         if (!userIsAdmin)
           return Retorno.Erro("Permissão do usuário não é admin deste hotel.");
@@ -136,7 +138,10 @@ namespace SaudeIA.Facades
         if (userManager == null)
           return Retorno.Erro($"Usuário {email} não encontrado.");
 
-        var isUserManagerAlready = await _utilsFacade.IsAdminOrManager(userManager.Id.ToString(), hotelId);
+        var isUserManagerAlready = await _utilsFacade.IsAdminOrManager(userManager.Id, hotelIdGuid);
+
+        if (isUserManagerAlready)
+          return Retorno.Erro($"Usuário {email} já possui permissão de manager neste hotel.");
 
         if (!isUserManagerAlready)
         {
@@ -155,6 +160,52 @@ namespace SaudeIA.Facades
         }
 
         return Retorno.Ok($"Permissão do usuario {email} atualizada com sucesso.");
+      }
+      catch (Exception e)
+      {
+        return Retorno.Excecao(e, "Erro ao processar a solicitação.");
+      }
+    }
+
+    public async Task<IRetorno> RemovePermissionUsers(string hotelId, string email)
+    {
+      try
+      {
+        var userEmail = _googleAuthService.GetUserEmailFromToken();
+
+        if (string.IsNullOrEmpty(userEmail))
+          return Retorno.Erro("Token inválido de e-mail.");
+
+        var user = await _utilsFacade.GetUserByEmail(userEmail);
+
+        if (user == null || user.Id == Guid.Empty)
+          return Retorno.Erro("Usuário não encontrado.");
+
+        var hotelIdGuid = Guid.Parse(hotelId);
+
+        var hotel = await _context.Hotel.FirstOrDefaultAsync(u => u.Id == hotelIdGuid);
+
+        if (hotel == null)
+          return Retorno.Erro("Hotel não encontrado.");
+
+        var userIsAdmin = await _utilsFacade.IsAdminOrManager(user.Id, hotelIdGuid);
+
+        if (!userIsAdmin)
+          return Retorno.Erro("Permissão do usuário não é admin deste hotel.");
+
+        var userManager = await _utilsFacade.GetUserByEmail(email);
+
+        if (userManager == null)
+          return Retorno.Erro($"Usuário {email} não encontrado.");
+        
+          var permissions = await _context.UsuarioPermissao
+                                          .FirstOrDefaultAsync(u => u.DetalhesModelId == hotelIdGuid && u.UserModelId == user.Id);
+
+          _context.UsuarioPermissao.Remove(permissions);
+          await _context.SaveChangesAsync();
+        
+
+        return Retorno.Ok($"Permissão do usuario {email} removida com sucesso.");
       }
       catch (Exception e)
       {

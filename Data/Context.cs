@@ -10,6 +10,8 @@ namespace SaudeIA.Data
     public DbSet<UsuarioPermissoes> UsuarioPermissao { get; set; }
     public DbSet<FotosDetalhesModel> Photos { get; set; }
     public DbSet<ContatosModel> Contacts { get; set; }
+    public DbSet<QuartosModel> Quartos { get; set; }
+    public DbSet<CategoryQuarto> CategoryQuarto { get; set; }
 
     public Context(DbContextOptions<Context> options) : base(options)
     {
@@ -26,6 +28,14 @@ namespace SaudeIA.Data
           .HasForeignKey(p => p.DetalhesModelId)
           .OnDelete(DeleteBehavior.Cascade);
 
+      // Relacionamento 1:N entre QuartosModel e FotosDetalhesModel
+      modelBuilder.Entity<QuartosModel>()
+          .HasMany(h => h.Photos)
+          .WithOne()
+          .HasForeignKey(p => p.QuartosModelId)
+          .OnDelete(DeleteBehavior.Cascade);
+
+
       // Relacionamento 1:N entre DetalhesModel e ContatosModel
       modelBuilder.Entity<DetalhesModel>()
           .HasMany(h => h.Contacts)
@@ -33,19 +43,21 @@ namespace SaudeIA.Data
           .HasForeignKey(c => c.DetalhesModelId)
           .OnDelete(DeleteBehavior.Cascade);
 
-      // Realacionamento N:N
+      // Realacionamento 1:N
       modelBuilder.Entity<DetalhesModel>()
           .HasMany(h => h.Permissions)
           .WithOne()
           .HasForeignKey(c => c.DetalhesModelId)
           .OnDelete(DeleteBehavior.Cascade);
 
-      // Realacionamento N:N
+      // Realacionamento 1:N
       modelBuilder.Entity<UserModel>()
           .HasMany(h => h.Permissions)
           .WithOne()
           .HasForeignKey(c => c.UserModelId)
           .OnDelete(DeleteBehavior.Cascade);
+
+
     }
   }
 }

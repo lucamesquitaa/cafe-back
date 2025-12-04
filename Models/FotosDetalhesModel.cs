@@ -7,10 +7,17 @@ namespace SaudeIA.Models
   {
     [Key]
     public Guid Id { get; set; } = Guid.NewGuid();
-    [ForeignKey("DetalhesModelId")]
+  
     public Guid DetalhesModelId { get; set; }
-    public string Alt { get; set; } = String.Empty;
-    public string Url { get; set; } = String.Empty;
+    [ForeignKey(nameof(DetalhesModelId))]
+    public DetalhesModel? Detalhes { get; set; }
+
+    public Guid QuartosModelId { get; set; }
+    [ForeignKey(nameof(QuartosModelId))]
+    public QuartosModel? Quartos { get; set; }
+
+    public string Alt { get; set; } = string.Empty;
+    public string Url { get; set; } = string.Empty;
     public bool? Stared { get; set; }
   }
 }

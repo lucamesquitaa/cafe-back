@@ -8,9 +8,19 @@ namespace SaudeIA.Models
     [Key]
     public Guid Id { get; set; } = Guid.NewGuid();
 
-    [ForeignKey("DetalhesModelId")]
+    // FK explícita
     public Guid DetalhesModelId { get; set; }
+
+    // Navegação com ForeignKey apontando para a FK acima
+    [ForeignKey(nameof(DetalhesModelId))]
+    public DetalhesModel? Detalhes { get; set; }
+
+    [Required]
+    [MaxLength(100)]
     public string Name { get; set; } = string.Empty;
+
+    [Required]
+    [MaxLength(200)]
     public string Contact { get; set; } = string.Empty;
   }
 }

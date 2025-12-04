@@ -20,12 +20,9 @@ namespace SaudeIA.Facades
       return await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == email);
     }
 
-    public async Task<bool> IsAdminOrManager(string userId, string hotelId)
+    public async Task<bool> IsAdminOrManager(Guid userId, Guid hotelId)
     {
-      var userGuid = Guid.Parse(userId);
-      var hotelGuid = Guid.Parse(hotelId);
-
-      var user = await _context.UsuarioPermissao.FirstOrDefaultAsync(x => x.UserModelId == userGuid && x.DetalhesModelId == hotelGuid);
+      var user = await _context.UsuarioPermissao.FirstOrDefaultAsync(x => x.UserModelId == userId && x.DetalhesModelId == hotelId);
 
       bool userIsAdmin = user?.Role == RoleUserModel.Admin || user?.Role == RoleUserModel.Manager || user?.Role == RoleUserModel.Turify;
 
