@@ -1,4 +1,4 @@
-﻿namespace SaudeIA.Facades.Interfaces
+﻿namespace Turify.Facades.Interfaces
 {
   public interface IRetorno
   {
@@ -33,14 +33,6 @@
 
     public static Retorno Erro(string mensagem, object? data = null)
       => new Retorno { Sucesso = false, Mensagem = mensagem, Data = data };
-
-    public static Retorno Excecao(Exception ex, string? mensagem = null)
-      => new Retorno
-      {
-        Sucesso = false,
-        Mensagem = mensagem ?? "Ocorreu uma exceção interna.",
-        ExcecaoMensagem = ex.Message
-      };
   }
 
   /// <summary>
@@ -63,13 +55,5 @@
 
     public static Retorno<T> Erro(string mensagem, T? data = default)
       => new Retorno<T> { Sucesso = false, Mensagem = mensagem,  Data = data };
-
-    public static Retorno<T> Excecao(Exception ex, string? mensagem = null)
-      => new Retorno<T>
-      {
-        Sucesso = false,
-        Mensagem = mensagem ?? "Ocorreu uma exceção interna.",
-        ExcecaoMensagem = ex.Message
-      };
   }
 }

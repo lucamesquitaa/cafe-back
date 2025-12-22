@@ -5,10 +5,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using SaudeIA.Data;
-using SaudeIA.Facades;
-using SaudeIA.Facades.Interfaces;
-using SaudeIA.Services;
+using Turify.Data;
+using Turify.Facades;
+using Turify.Facades.Interfaces;
+using Turify.Services;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
@@ -58,6 +58,7 @@ builder.Services.AddTransient<HotelFacade>();
 builder.Services.AddTransient<QuartosFacade>();
 builder.Services.AddTransient<CategoryQuartosFacade>();
 builder.Services.AddTransient<UtilsFacade>();
+
 // Registrar o Producer como singleton ou scoped
 builder.Services.AddSingleton<IRabbitMqProducer>(sp =>
     new RabbitMQProducer(
@@ -67,7 +68,7 @@ builder.Services.AddSingleton<IRabbitMqProducer>(sp =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<GoogleAuthService>();
 var connectionString = "Host=postgres_local;Port=5432;Database=hotelariadb;Username=lucam;Password=Xy4MMes6TZj";
-builder.Services.AddDbContext<SaudeIA.Data.Context>(options =>
+builder.Services.AddDbContext<Turify.Data.Context>(options =>
     options.UseNpgsql(connectionString)
 );
 
@@ -152,10 +153,10 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-  var context = scope.ServiceProvider.GetRequiredService<SaudeIA.Data.Context>();
+  var context = scope.ServiceProvider.GetRequiredService<Turify.Data.Context>();
   context.Database.Migrate();
 }
-
+app.UseMiddleware<ErrorLoggingMiddleware>();
 app.Use(async (context, next) =>
 {
   context.Response.Headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups";

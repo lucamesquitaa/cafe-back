@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace SaudeIA.Models.Enums
+namespace Turify.Models.Enums
 {
   public enum CategoryHotelModel
   {
@@ -28,6 +28,21 @@ namespace SaudeIA.Models.Enums
     Noite = 3,
     [Description("Dia inteiro")]
     DiaInteiro = 4,
+  }
+  public enum BedTypeEnum
+  {
+    [Description("Solteiro")]
+    Solteiro = 1,
+    [Description("Beliche")]
+    Beliche = 2,
+    [Description("Casal")]
+    Casal = 3,
+    [Description("Queen")]
+    Queen = 4,
+    [Description("King")]
+    King = 5,
+    [Description("Berco")]
+    Berco = 6,
   }
   public class RoleUserModel
   {

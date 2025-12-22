@@ -1,7 +1,7 @@
-﻿using SaudeIA.Models;
-using SaudeIA.Models.DTOs;
+﻿using Turify.Models;
+using Turify.Models.DTOs;
 
-namespace SaudeIA.Facades.Interfaces
+namespace Turify.Facades.Interfaces
 {
   public interface IQuartosFacade : IRetorno
   {

@@ -1,4 +1,4 @@
-﻿namespace SaudeIA.Models.DTOs
+﻿namespace Turify.Models.DTOs
 {
   public class hotelIdObj
   {

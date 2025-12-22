@@ -1,15 +1,16 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SaudeIA.Data;
-using SaudeIA.Facades.Interfaces;
-using SaudeIA.Models;
-using SaudeIA.Models.DTOs;
-using SaudeIA.Models.Enums;
-using SaudeIA.Services;
+using Turify.Data;
+using Turify.Facades.Interfaces;
+using Turify.Models;
+using Turify.Models.DTOs;
+using Turify.Models.Enums;
+using Turify.Services;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http;
 using System.Security.Claims;
+using System.Text.Json;
 
-namespace SaudeIA.Facades
+namespace Turify.Facades
 {
   public class UserFacade : IUserFacade, IRetorno
   {
@@ -64,7 +65,7 @@ namespace SaudeIA.Facades
       }
       catch (Exception e)
       {
-        return Retorno<UserModel>.Excecao(e, "Erro ao processar a solicitação.");
+        throw new Exception("Erro ao processar a solicitação. obj: " + JsonSerializer.Serialize(userGoogle));
       }
     }
 
@@ -103,7 +104,7 @@ namespace SaudeIA.Facades
       }
       catch (Exception e)
       {
-        return Retorno<IEnumerable<GetAllManagers>>.Excecao(e, "Erro ao processar a solicitação.");
+        throw new Exception("Erro ao processar a solicitação. id: " + hotelId);
       }
     }
 
@@ -128,7 +129,7 @@ namespace SaudeIA.Facades
         if (hotel == null)
           return Retorno.Erro("Hotel não encontrado.");
 
-        var userIsAdmin = await _utilsFacade.IsAdminOrManager(user.Id, hotelIdGuid);
+        var userIsAdmin = await _utilsFacade.IsAdminOnly(user.Id, hotelIdGuid);
 
         if (!userIsAdmin)
           return Retorno.Erro("Permissão do usuário não é admin deste hotel.");
@@ -152,7 +153,7 @@ namespace SaudeIA.Facades
             Id = Guid.NewGuid(),
             DetalhesModelId = Guid.Parse(hotelId),
             UserModelEmail = email,
-            UserModelId = user.Id,
+            UserModelId = userManager.Id,
             Role = newRole
           };
           await _context.UsuarioPermissao.AddAsync(permissions);
@@ -163,7 +164,7 @@ namespace SaudeIA.Facades
       }
       catch (Exception e)
       {
-        return Retorno.Excecao(e, "Erro ao processar a solicitação.");
+        throw new Exception("Erro ao processar a solicitação. id: " + hotelId + "obj: " + email);
       }
     }
 
@@ -188,7 +189,7 @@ namespace SaudeIA.Facades
         if (hotel == null)
           return Retorno.Erro("Hotel não encontrado.");
 
-        var userIsAdmin = await _utilsFacade.IsAdminOrManager(user.Id, hotelIdGuid);
+        var userIsAdmin = await _utilsFacade.IsAdminOnly(user.Id, hotelIdGuid);
 
         if (!userIsAdmin)
           return Retorno.Erro("Permissão do usuário não é admin deste hotel.");
@@ -199,7 +200,7 @@ namespace SaudeIA.Facades
           return Retorno.Erro($"Usuário {email} não encontrado.");
         
           var permissions = await _context.UsuarioPermissao
-                                          .FirstOrDefaultAsync(u => u.DetalhesModelId == hotelIdGuid && u.UserModelId == user.Id);
+                                          .FirstOrDefaultAsync(u => u.DetalhesModelId == hotelIdGuid && u.UserModelId == userManager.Id);
 
           _context.UsuarioPermissao.Remove(permissions);
           await _context.SaveChangesAsync();
@@ -209,7 +210,7 @@ namespace SaudeIA.Facades
       }
       catch (Exception e)
       {
-        return Retorno.Excecao(e, "Erro ao processar a solicitação.");
+        throw new Exception("Erro ao processar a solicitação. id: " + hotelId + "obj: " + email);
       }
     }
   }

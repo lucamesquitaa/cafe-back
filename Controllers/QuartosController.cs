@@ -3,17 +3,17 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using NuGet.Common;
-using SaudeIA.Data;
-using SaudeIA.Facades;
-using SaudeIA.Facades.Interfaces;
-using SaudeIA.Models;
-using SaudeIA.Models.DTOs;
-using SaudeIA.Models.Enums;
+using Turify.Data;
+using Turify.Facades;
+using Turify.Facades.Interfaces;
+using Turify.Models;
+using Turify.Models.DTOs;
+using Turify.Models.Enums;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace SaudeIA.Controllers
+namespace Turify.Controllers
 {
   [ApiController]
   [Route("api/[controller]")]
@@ -54,6 +54,17 @@ namespace SaudeIA.Controllers
     public async Task<IActionResult> PostQuartos([FromBody] QuartosModel obj, string hotelId)
     {
       var result = await _quartosFacade.PostQuartosFacade(obj, hotelId);
+
+      if (result.Sucesso == false)
+        return BadRequest(result);
+      else
+        return Ok(result);
+    }
+
+    [HttpDelete("DeleteQuarto/{hotelId}/{quartoId}")]
+    public async Task<IActionResult> DeleteQuartos(string hotelId, string quartoId)
+    {
+      var result = await _quartosFacade.DeleteQuartosFacade(hotelId, quartoId);
 
       if (result.Sucesso == false)
         return BadRequest(result);

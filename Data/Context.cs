@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SaudeIA.Models;
+using Turify.Models;
 
-namespace SaudeIA.Data
+namespace Turify.Data
 {
   public class Context : DbContext
   {
@@ -12,7 +12,7 @@ namespace SaudeIA.Data
     public DbSet<ContatosModel> Contacts { get; set; }
     public DbSet<QuartosModel> Quartos { get; set; }
     public DbSet<CategoryQuarto> CategoryQuarto { get; set; }
-
+    public DbSet<ErroLogModel> ErrorLogs { get; set; }
     public Context(DbContextOptions<Context> options) : base(options)
     {
     }
@@ -20,6 +20,16 @@ namespace SaudeIA.Data
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
       base.OnModelCreating(modelBuilder);
+
+      //catalogo reutilizavel chamado CategoryQuarto
+      modelBuilder.Entity<QuartosModel>()
+      .HasMany(q => q.Category)
+      .WithMany()
+      .UsingEntity<Dictionary<string, object>>(
+        "QuartoCategory",
+        j => j.HasOne<CategoryQuarto>().WithMany().HasForeignKey("CategoryQuartoId").OnDelete(DeleteBehavior.Restrict),
+        j => j.HasOne<QuartosModel>().WithMany().HasForeignKey("QuartosModelId").OnDelete(DeleteBehavior.Cascade)
+      );
 
       // Relacionamento 1:N entre DetalhesModel e FotosDetalhesModel
       modelBuilder.Entity<DetalhesModel>()

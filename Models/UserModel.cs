@@ -1,8 +1,8 @@
-﻿using SaudeIA.Models.Enums;
+﻿using Turify.Models.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace SaudeIA.Models
+namespace Turify.Models
 {
   public class UserModel
   {

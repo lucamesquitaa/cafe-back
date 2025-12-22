@@ -1,10 +1,10 @@
 ﻿
 using Microsoft.AspNetCore.Mvc;
-using SaudeIA.Models;
-using SaudeIA.Models.DTOs;
+using Turify.Models;
+using Turify.Models.DTOs;
 using System.IdentityModel.Tokens.Jwt;
 
-namespace SaudeIA.Facades.Interfaces
+namespace Turify.Facades.Interfaces
 {
   public interface IUserFacade : IRetorno
   {

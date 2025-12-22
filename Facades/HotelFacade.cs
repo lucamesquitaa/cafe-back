@@ -2,14 +2,15 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Graph;
 using RabbitMQ.Stream.Client.Reliable;
-using SaudeIA.Data;
-using SaudeIA.Facades.Interfaces;
-using SaudeIA.Models;
-using SaudeIA.Models.DTOs;
-using SaudeIA.Models.Enums;
-using SaudeIA.Services;
+using Turify.Data;
+using Turify.Facades.Interfaces;
+using Turify.Models;
+using Turify.Models.DTOs;
+using Turify.Models.Enums;
+using Turify.Services;
+using System.Text.Json;
 
-namespace SaudeIA.Facades
+namespace Turify.Facades
 {
   public class HotelFacade : IHotelFacade, IRetorno
   {
@@ -50,7 +51,7 @@ namespace SaudeIA.Facades
       }
       catch (Exception e)
       {
-        return Retorno<IEnumerable<GetAllHoteis>>.Excecao(e, "Erro ao processar a solicitação.");
+        throw new Exception("Erro ao processar a solicitação.");
       }
     }
     public async Task<IRetorno<GetDetalheById>> GetDetalhesFacade(string hotelId)
@@ -93,7 +94,7 @@ namespace SaudeIA.Facades
       }
       catch (Exception e)
       {
-        return Retorno<GetDetalheById>.Excecao(e, "Erro ao processar a solicitação.");
+        throw new Exception("Erro ao processar a solicitação.");
       }
     }
 
@@ -123,7 +124,7 @@ namespace SaudeIA.Facades
       }
       catch (Exception e)
       {
-        return Retorno<DetalhesModel>.Excecao(e, "Erro ao processar a solicitação.");
+        throw new Exception("Erro ao processar a solicitação. id: " + hotelId );
       }
     }
 
@@ -160,7 +161,7 @@ namespace SaudeIA.Facades
       }
       catch (Exception e)
       {
-        return Retorno<IEnumerable<GetAllHoteis>>.Excecao(e, "Erro ao processar a solicitação.");
+        throw new Exception("Erro ao processar a solicitação. ");
       }
     }
 
@@ -241,7 +242,7 @@ namespace SaudeIA.Facades
       }
       catch (Exception e)
       {
-        return Retorno.Excecao(e, "Erro ao processar a solicitação.");
+        throw new Exception("Erro ao processar a solicitação. obj: " + JsonSerializer.Serialize(hotel));
       }
     }
 
@@ -314,7 +315,7 @@ namespace SaudeIA.Facades
       }
       catch (Exception e)
       {
-         return Retorno.Excecao(e, "Erro ao processar a solicitação.");
+        throw new Exception("Erro ao processar a solicitação. id: " + id + " obj: " + JsonSerializer.Serialize(hotel));
       }
     }
 
@@ -335,7 +336,7 @@ namespace SaudeIA.Facades
 
         var idGuid = Guid.Parse(id);
 
-        bool userHasPerm = await _utilsFacade.IsAdminOrManager(user.Id, idGuid);
+        bool userHasPerm = await _utilsFacade.IsAdminOnly(user.Id, idGuid);
 
         if (!userHasPerm)
           return Retorno.Erro("Permissão do usuário não é admin/gerente deste hotel.");
@@ -362,7 +363,7 @@ namespace SaudeIA.Facades
       }
       catch (Exception e)
       {
-        return Retorno.Excecao(e, "Erro ao processar a solicitação.");
+        throw new Exception("Erro ao processar a solicitação. id: " + id);
       }
     }
   }

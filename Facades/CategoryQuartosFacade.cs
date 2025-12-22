@@ -1,11 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
-using SaudeIA.Data;
-using SaudeIA.Facades.Interfaces;
-using SaudeIA.Models;
-using SaudeIA.Services;
+using Turify.Data;
+using Turify.Facades.Interfaces;
+using Turify.Models;
+using Turify.Services;
+using System.Text.Json;
 
-namespace SaudeIA.Facades
+namespace Turify.Facades
 {
   public class CategoryQuartosFacade : IRetorno
   {
@@ -40,7 +41,7 @@ namespace SaudeIA.Facades
       }
       catch (Exception ex)
       {
-        return Retorno<IEnumerable<CategoryQuarto>>.Excecao(ex, "Erro ao processar a solicitação.");
+        throw new Exception("Erro ao processar a solicitação. id: " + hotelId);
       }
     }
     public async Task<IRetorno> PostCategoryQuartos(CategoryQuarto obj, string hotelId)
@@ -58,7 +59,7 @@ namespace SaudeIA.Facades
       }
       catch (Exception ex)
       {
-        return Retorno.Excecao(ex, "Erro ao processar a solicitação.");
+        throw new Exception("Erro ao processar a solicitação. id: " + hotelId + " obj: " + JsonSerializer.Serialize(obj) );
       }
     }
 
@@ -80,7 +81,7 @@ namespace SaudeIA.Facades
       }
       catch (Exception ex)
       {
-        return Retorno.Excecao(ex, "Erro ao processar a solicitação.");
+        throw new Exception("Erro ao processar a solicitação. id: "  + id);
       }
     }
   }

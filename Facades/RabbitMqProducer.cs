@@ -1,5 +1,5 @@
 ﻿using RabbitMQ.Client;
-using SaudeIA.Facades.Interfaces;
+using Turify.Facades.Interfaces;
 using System.Text;
 using System.Text.Json;
 
