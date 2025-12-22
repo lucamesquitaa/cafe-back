@@ -1,9 +1,9 @@
 ﻿using Google.Apis.Auth;
 using Microsoft.AspNetCore.Mvc;
-using SaudeIA.Models.Enums;
+using Turify.Models.Enums;
 using System.IdentityModel.Tokens.Jwt;
 
-namespace SaudeIA.Services
+namespace Turify.Services
 {
   public class GoogleAuthService
   {

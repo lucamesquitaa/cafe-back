@@ -5,12 +5,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 using NuGet.Protocol;
-using SaudeIA.Data;
-using SaudeIA.Facades;
-using SaudeIA.Facades.Interfaces;
-using SaudeIA.Models;
+using Turify.Data;
+using Turify.Facades;
+using Turify.Facades.Interfaces;
+using Turify.Models;
 
-namespace SaudeIA.Controllers
+namespace Turify.Controllers
 {
   [Route("api/[controller]")]
   [ApiController]
@@ -41,7 +41,7 @@ namespace SaudeIA.Controllers
 
 
     // GET: api/<ValuesController>
-    [Authorize]
+    [AllowAnonymous]
     [HttpGet("{hotelId}")]
     public async Task<IActionResult> Get(string hotelId)
     {

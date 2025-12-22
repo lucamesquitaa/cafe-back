@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using SaudeIA.Data;
+using Turify.Data;
 
 #nullable disable
 
-namespace SaudeIA.Migrations
+namespace Turify.Migrations
 {
     [DbContext(typeof(Context))]
     [Migration("20251204012655_novocomquartos")]
@@ -25,7 +25,7 @@ namespace SaudeIA.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("SaudeIA.Models.CategoryQuarto", b =>
+            modelBuilder.Entity("Turify.Models.CategoryQuarto", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -53,7 +53,7 @@ namespace SaudeIA.Migrations
                     b.ToTable("CategoryQuarto");
                 });
 
-            modelBuilder.Entity("SaudeIA.Models.ContatosModel", b =>
+            modelBuilder.Entity("Turify.Models.ContatosModel", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -87,7 +87,7 @@ namespace SaudeIA.Migrations
                     b.ToTable("Contacts");
                 });
 
-            modelBuilder.Entity("SaudeIA.Models.DTOs.BedsDTO", b =>
+            modelBuilder.Entity("Turify.Models.DTOs.BedsDTO", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -110,7 +110,7 @@ namespace SaudeIA.Migrations
                     b.ToTable("BedsDTO");
                 });
 
-            modelBuilder.Entity("SaudeIA.Models.DetalhesModel", b =>
+            modelBuilder.Entity("Turify.Models.DetalhesModel", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -228,7 +228,7 @@ namespace SaudeIA.Migrations
                     b.ToTable("Hotel");
                 });
 
-            modelBuilder.Entity("SaudeIA.Models.FotosDetalhesModel", b =>
+            modelBuilder.Entity("Turify.Models.FotosDetalhesModel", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -276,7 +276,7 @@ namespace SaudeIA.Migrations
                     b.ToTable("Photos");
                 });
 
-            modelBuilder.Entity("SaudeIA.Models.QuartosModel", b =>
+            modelBuilder.Entity("Turify.Models.QuartosModel", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -353,7 +353,7 @@ namespace SaudeIA.Migrations
                     b.ToTable("Quartos");
                 });
 
-            modelBuilder.Entity("SaudeIA.Models.UserModel", b =>
+            modelBuilder.Entity("Turify.Models.UserModel", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -384,7 +384,7 @@ namespace SaudeIA.Migrations
                     b.ToTable("Usuarios");
                 });
 
-            modelBuilder.Entity("SaudeIA.Models.UsuarioPermissoes", b =>
+            modelBuilder.Entity("Turify.Models.UsuarioPermissoes", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -429,28 +429,28 @@ namespace SaudeIA.Migrations
                     b.ToTable("UsuarioPermissao");
                 });
 
-            modelBuilder.Entity("SaudeIA.Models.CategoryQuarto", b =>
+            modelBuilder.Entity("Turify.Models.CategoryQuarto", b =>
                 {
-                    b.HasOne("SaudeIA.Models.DetalhesModel", "Detalhes")
+                    b.HasOne("Turify.Models.DetalhesModel", "Detalhes")
                         .WithMany()
                         .HasForeignKey("DetalhesModelId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SaudeIA.Models.QuartosModel", null)
+                    b.HasOne("Turify.Models.QuartosModel", null)
                         .WithMany("Category")
                         .HasForeignKey("QuartosModelId");
 
                     b.Navigation("Detalhes");
                 });
 
-            modelBuilder.Entity("SaudeIA.Models.ContatosModel", b =>
+            modelBuilder.Entity("Turify.Models.ContatosModel", b =>
                 {
-                    b.HasOne("SaudeIA.Models.DetalhesModel", "Detalhes")
+                    b.HasOne("Turify.Models.DetalhesModel", "Detalhes")
                         .WithMany()
                         .HasForeignKey("DetalhesId");
 
-                    b.HasOne("SaudeIA.Models.DetalhesModel", null)
+                    b.HasOne("Turify.Models.DetalhesModel", null)
                         .WithMany("Contacts")
                         .HasForeignKey("DetalhesModelId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -459,30 +459,30 @@ namespace SaudeIA.Migrations
                     b.Navigation("Detalhes");
                 });
 
-            modelBuilder.Entity("SaudeIA.Models.DTOs.BedsDTO", b =>
+            modelBuilder.Entity("Turify.Models.DTOs.BedsDTO", b =>
                 {
-                    b.HasOne("SaudeIA.Models.QuartosModel", null)
+                    b.HasOne("Turify.Models.QuartosModel", null)
                         .WithMany("Beds")
                         .HasForeignKey("QuartosModelId");
                 });
 
-            modelBuilder.Entity("SaudeIA.Models.FotosDetalhesModel", b =>
+            modelBuilder.Entity("Turify.Models.FotosDetalhesModel", b =>
                 {
-                    b.HasOne("SaudeIA.Models.DetalhesModel", "Detalhes")
+                    b.HasOne("Turify.Models.DetalhesModel", "Detalhes")
                         .WithMany()
                         .HasForeignKey("DetalhesId");
 
-                    b.HasOne("SaudeIA.Models.DetalhesModel", null)
+                    b.HasOne("Turify.Models.DetalhesModel", null)
                         .WithMany("Photos")
                         .HasForeignKey("DetalhesModelId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SaudeIA.Models.QuartosModel", "Quartos")
+                    b.HasOne("Turify.Models.QuartosModel", "Quartos")
                         .WithMany()
                         .HasForeignKey("QuartosId");
 
-                    b.HasOne("SaudeIA.Models.QuartosModel", null)
+                    b.HasOne("Turify.Models.QuartosModel", null)
                         .WithMany("Photos")
                         .HasForeignKey("QuartosModelId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -493,9 +493,9 @@ namespace SaudeIA.Migrations
                     b.Navigation("Quartos");
                 });
 
-            modelBuilder.Entity("SaudeIA.Models.QuartosModel", b =>
+            modelBuilder.Entity("Turify.Models.QuartosModel", b =>
                 {
-                    b.HasOne("SaudeIA.Models.DetalhesModel", "Detalhes")
+                    b.HasOne("Turify.Models.DetalhesModel", "Detalhes")
                         .WithMany("Quartos")
                         .HasForeignKey("DetalhesModelId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -504,23 +504,23 @@ namespace SaudeIA.Migrations
                     b.Navigation("Detalhes");
                 });
 
-            modelBuilder.Entity("SaudeIA.Models.UsuarioPermissoes", b =>
+            modelBuilder.Entity("Turify.Models.UsuarioPermissoes", b =>
                 {
-                    b.HasOne("SaudeIA.Models.DetalhesModel", "Detalhes")
+                    b.HasOne("Turify.Models.DetalhesModel", "Detalhes")
                         .WithMany()
                         .HasForeignKey("DetalhesId");
 
-                    b.HasOne("SaudeIA.Models.DetalhesModel", null)
+                    b.HasOne("Turify.Models.DetalhesModel", null)
                         .WithMany("Permissions")
                         .HasForeignKey("DetalhesModelId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SaudeIA.Models.UserModel", "User")
+                    b.HasOne("Turify.Models.UserModel", "User")
                         .WithMany()
                         .HasForeignKey("UserId");
 
-                    b.HasOne("SaudeIA.Models.UserModel", null)
+                    b.HasOne("Turify.Models.UserModel", null)
                         .WithMany("Permissions")
                         .HasForeignKey("UserModelId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -531,7 +531,7 @@ namespace SaudeIA.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("SaudeIA.Models.DetalhesModel", b =>
+            modelBuilder.Entity("Turify.Models.DetalhesModel", b =>
                 {
                     b.Navigation("Contacts");
 
@@ -542,7 +542,7 @@ namespace SaudeIA.Migrations
                     b.Navigation("Quartos");
                 });
 
-            modelBuilder.Entity("SaudeIA.Models.QuartosModel", b =>
+            modelBuilder.Entity("Turify.Models.QuartosModel", b =>
                 {
                     b.Navigation("Beds");
 
@@ -551,7 +551,7 @@ namespace SaudeIA.Migrations
                     b.Navigation("Photos");
                 });
 
-            modelBuilder.Entity("SaudeIA.Models.UserModel", b =>
+            modelBuilder.Entity("Turify.Models.UserModel", b =>
                 {
                     b.Navigation("Permissions");
                 });

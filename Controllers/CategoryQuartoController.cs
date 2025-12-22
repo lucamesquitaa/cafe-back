@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using SaudeIA.Facades;
-using SaudeIA.Models;
+using Turify.Facades;
+using Turify.Models;
 
-namespace SaudeIA.Controllers
+namespace Turify.Controllers
 {
   [ApiController]
   [Route("api/[controller]")]

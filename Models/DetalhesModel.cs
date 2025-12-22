@@ -1,8 +1,8 @@
-﻿using SaudeIA.Models.Enums;
+﻿using Turify.Models.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace SaudeIA.Models
+namespace Turify.Models
 {
   public class DetalhesModel
   {
@@ -33,10 +33,7 @@ namespace SaudeIA.Models
 
     public bool? Beach { get; set; }
     public bool? Downtown { get; set; }
-
-    // Se renomear, gere migration (nome atual no DB será diferente)
     public bool? Airpot { get; set; }
-
     public bool? Highway { get; set; }
     public bool? Hospital { get; set; }
     public bool? Coffee { get; set; }

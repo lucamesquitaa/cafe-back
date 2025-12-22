@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using SaudeIA.Data;
-using SaudeIA.Facades.Interfaces;
-using SaudeIA.Models;
-using SaudeIA.Models.DTOs;
-using SaudeIA.Models.Enums;
-using SaudeIA.Services;
+using Turify.Data;
+using Turify.Facades.Interfaces;
+using Turify.Models;
+using Turify.Models.DTOs;
+using Turify.Models.Enums;
+using Turify.Services;
 
-namespace SaudeIA.Facades
+namespace Turify.Facades
 {
   public class QuartosFacade : IQuartosFacade, IRetorno
   {
@@ -45,7 +46,7 @@ namespace SaudeIA.Facades
       }
       catch (Exception e)
       {
-        return Retorno<IEnumerable<QuartosModel>>.Excecao(e, "Erro ao processar a solicitação.");
+        throw new Exception("Erro ao processar a solicitação. id: " + hotelId);
       }
     }
 
@@ -68,7 +69,7 @@ namespace SaudeIA.Facades
       }
       catch (Exception e)
       {
-        return Retorno<QuartosModel>.Excecao(e, "Erro ao processar a solicitação.");
+        throw new Exception("Erro ao processar a solicitação. id: " + quartoId);
       }
     }
 
@@ -88,12 +89,10 @@ namespace SaudeIA.Facades
 
         var hotelGuid = Guid.Parse(hotelId);
 
-        // Verifica permissão (admin/manager) para criar ou atualizar quartos
         bool userHasPerm = await _utilsFacade.IsAdminOrManager(user.Id, hotelGuid);
         if (!userHasPerm)
           return Retorno.Erro("Permissão do usuário não é admin/gerente deste hotel.");
 
-        // Busca quarto existente (PUT)
         var quartoExistente = await _context.Quartos
                                             .Include(q => q.Category)
                                             .Include(q => q.Beds)
@@ -101,23 +100,24 @@ namespace SaudeIA.Facades
 
         List<CategoryQuarto> resolvedCats = new List<CategoryQuarto>();
 
-        if (quartos.Category.Any())
+        // Resolve categorias (mesma lógica que já está implementada)
+        if (quartos.Category != null && quartos.Category.Any())
         {
-          resolvedCats = await _context.CategoryQuarto
-                                          .Where(c => quartos.Category.Select(rc => rc.Id).Contains(c.Id))
-                                          .ToListAsync();
+          var ids = quartos.Category.Select(rc => rc.Id).ToList();
+          var categoriesFromDb = await _context.CategoryQuarto.Where(c => ids.Contains(c.Id)).ToListAsync();
+          if (categoriesFromDb.Count != ids.Count)
+            return Retorno.Erro("Uma ou mais categorias informadas não foram encontradas.");
+          resolvedCats = categoriesFromDb;
         }
-        
 
         if (quartoExistente != null)
-        { 
+        {
+          // Atualiza campos comuns...
           quartoExistente.Name = quartos.Name;
-          quartoExistente.Tags = quartos.Tags;
           quartoExistente.Description = quartos.Description;
           quartoExistente.MaxOcupation = quartos.MaxOcupation;
           quartoExistente.Refund = quartos.Refund;
           quartoExistente.AreaSize = quartos.AreaSize;
-          quartoExistente.Beds = quartos.Beds;
           quartoExistente.Diff = quartos.Diff;
           quartoExistente.Freeze = quartos.Freeze;
           quartoExistente.Vault = quartos.Vault;
@@ -131,15 +131,18 @@ namespace SaudeIA.Facades
           quartoExistente.BathProducts = quartos.BathProducts;
           quartoExistente.Tv = quartos.Tv;
           quartoExistente.TypeTv = quartos.TypeTv;
-
+          quartoExistente.Beds = quartos.Beds;
 
           if (resolvedCats.Any())
             quartoExistente.Category = resolvedCats;
+          else if (quartos.Category != null && !quartos.Category.Any())
+            quartoExistente.Category = new List<CategoryQuarto>();
 
           await _context.SaveChangesAsync();
           return Retorno.Ok("Dados do quarto atualizados com sucesso.");
         }
-        
+
+        // INSERT
         quartos.DetalhesModelId = hotelGuid;
 
         if (resolvedCats.Any())
@@ -150,17 +153,45 @@ namespace SaudeIA.Facades
 
         return Retorno.Ok("Dados foram registrados com sucesso.");
       }
-      catch (InvalidOperationException ioe)
-      {
-        return Retorno.Erro(ioe.Message);
-      }
-      catch (KeyNotFoundException knf)
-      {
-        return Retorno.Erro(knf.Message);
-      }
       catch (Exception e)
       {
-        return Retorno.Excecao(e, "Erro ao processar a solicitação.");
+        throw new Exception("Erro ao processar a solicitação. id: " + hotelId + "obj: " + JsonSerializer.Serialize(quartos));
+      }
+    }
+    public async Task<IRetorno> DeleteQuartosFacade(string quartoId, string hotelId)
+    {
+      try
+      {
+        var userEmail = _googleAuthService.GetUserEmailFromToken();
+
+        if (string.IsNullOrEmpty(userEmail))
+          return Retorno.Erro("Usuário não encontrado - email.");
+
+        var user = await _utilsFacade.GetUserByEmail(userEmail);
+
+        if (user == null || user.Id == Guid.Empty)
+          return Retorno.Erro("Usuário não encontrado - id.");
+
+        var hotelGuid = Guid.Parse(hotelId);
+
+        bool userHasPerm = await _utilsFacade.IsAdminOnly(user.Id, hotelGuid);
+        if (!userHasPerm)
+          return Retorno.Erro("Permissão do usuário não é admin deste hotel.");
+
+        var quartoGuid = Guid.Parse(quartoId);
+
+        var quartoExistente = await _context.Quartos
+                                            .FirstOrDefaultAsync(q => q.Id == quartoGuid);
+
+        if (quartoExistente == null)
+          return Retorno.Erro("Quarto não encontrado.");
+
+        _context.Quartos.Remove(quartoExistente);
+        await _context.SaveChangesAsync();
+
+        return Retorno.Ok("Dados deletados com sucesso.");
+      } catch (Exception e) {
+        throw new Exception("Erro ao processar a solicitação. id: " + hotelId + " quarto id : " + quartoId);
       }
     }
   }

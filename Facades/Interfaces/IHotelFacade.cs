@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using SaudeIA.Models.DTOs;
-using SaudeIA.Models;
+using Turify.Models.DTOs;
+using Turify.Models;
 
-namespace SaudeIA.Facades.Interfaces
+namespace Turify.Facades.Interfaces
 {
   public interface IHotelFacade : IRetorno
   {

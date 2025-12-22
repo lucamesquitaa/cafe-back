@@ -1,11 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SaudeIA.Data;
-using SaudeIA.Facades.Interfaces;
-using SaudeIA.Models;
-using SaudeIA.Models.Enums;
-using SaudeIA.Services;
+using Turify.Data;
+using Turify.Facades.Interfaces;
+using Turify.Models;
+using Turify.Models.Enums;
+using Turify.Services;
 
-namespace SaudeIA.Facades
+namespace Turify.Facades
 {
   public class UtilsFacade
   {
@@ -25,6 +25,15 @@ namespace SaudeIA.Facades
       var user = await _context.UsuarioPermissao.FirstOrDefaultAsync(x => x.UserModelId == userId && x.DetalhesModelId == hotelId);
 
       bool userIsAdmin = user?.Role == RoleUserModel.Admin || user?.Role == RoleUserModel.Manager || user?.Role == RoleUserModel.Turify;
+
+      return userIsAdmin;
+    }
+
+    public async Task<bool> IsAdminOnly(Guid userId, Guid hotelId)
+    {
+      var user = await _context.UsuarioPermissao.FirstOrDefaultAsync(x => x.UserModelId == userId && x.DetalhesModelId == hotelId);
+
+      bool userIsAdmin = user?.Role == RoleUserModel.Admin || user?.Role == RoleUserModel.Turify;
 
       return userIsAdmin;
     }

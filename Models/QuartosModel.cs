@@ -1,8 +1,8 @@
-﻿using SaudeIA.Models.DTOs;
+﻿using Turify.Models.DTOs;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace SaudeIA.Models
+namespace Turify.Models
 {
   public class QuartosModel
   {
@@ -14,13 +14,12 @@ namespace SaudeIA.Models
     [ForeignKey(nameof(DetalhesModelId))]
     public DetalhesModel? Detalhes { get; set; }
     public string Name { get; set; } = string.Empty;
-    public IEnumerable<CategoryQuarto> Category { get; set; } = new List<CategoryQuarto>();
-    public string[] Tags { get; set; } = Array.Empty<string>();
+    public ICollection<CategoryQuarto> Category { get; set; } = new List<CategoryQuarto>();
     public string Description { get; set; } = string.Empty;
     public int MaxOcupation { get; set; }
     public bool? Refund { get; set; }
     public string AreaSize { get; set; } = string.Empty;
-    public IEnumerable<BedsDTO> Beds { get; set; } = new List<BedsDTO>();
+    public ICollection<BedsDTO> Beds { get; set; } = new List<BedsDTO>();
     public string? Diff { get; set; }
     public bool? Freeze { get; set; }
     public bool? Vault { get; set; }

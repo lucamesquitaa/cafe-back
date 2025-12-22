@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace SaudeIA.Migrations
+namespace Turify.Migrations
 {
     /// <inheritdoc />
     public partial class novocomquartos : Migration

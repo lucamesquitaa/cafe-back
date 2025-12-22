@@ -1,4 +1,4 @@
-﻿namespace SaudeIA.Facades.Interfaces
+﻿namespace Turify.Facades.Interfaces
 {
   public interface IRabbitMqProducer
   {
