@@ -165,23 +165,23 @@ namespace Turify.Facades
       }
     }
 
-    public async Task<IRetorno> PostDetalhesFacade(DetalhesModel hotel)
+    public async Task<IRetorno<DetalhesModel>> PostDetalhesFacade(DetalhesModel hotel)
     {
       try
       {
         var userEmail = _googleAuthService.GetUserEmailFromToken();
 
         if (string.IsNullOrEmpty(userEmail))
-          return Retorno.Erro("Usuário não encontrado - email.");
+          return Retorno<DetalhesModel>.Erro("Usuário não encontrado - email.");
 
         var user = await _utilsFacade.GetUserByEmail(userEmail);
 
         if (user == null || user.Id == Guid.Empty)
-          return Retorno.Erro("Usuário não encontrado - id.");
+          return Retorno<DetalhesModel>.Erro("Usuário não encontrado - id.");
 
         var urlHotel = await _context.Hotel.FirstOrDefaultAsync(u => u.Url == hotel.Url);
         if (urlHotel != null)
-          return Retorno.Erro("Já existe um hotel cadastrado com esta URL.");
+          return Retorno<DetalhesModel>.Erro("Já existe um hotel cadastrado com esta URL.");
 
         var novoId = Guid.NewGuid();
 
@@ -238,7 +238,7 @@ namespace Turify.Facades
 
         await _context.SaveChangesAsync();
 
-        return Retorno.Ok("Dados foram registrados com sucesso.");
+        return Retorno<DetalhesModel>.Ok(hotelNew);
       }
       catch (Exception e)
       {
@@ -247,26 +247,26 @@ namespace Turify.Facades
     }
 
 
-    public async Task<IRetorno> PutDetalhesFacade(DetalhesModel hotel, string id)
+    public async Task<IRetorno<DetalhesModel>> PutDetalhesFacade(DetalhesModel hotel, string id)
     {
       try
       {
         var userEmail = _googleAuthService.GetUserEmailFromToken();
 
         if (string.IsNullOrEmpty(userEmail))
-          return Retorno.Erro("Usuário não encontrado - email.");
+          return Retorno<DetalhesModel>.Erro("Usuário não encontrado - email.");
 
         var user = await _utilsFacade.GetUserByEmail(userEmail);
 
         if (user == null || user.Id == Guid.Empty)
-          return Retorno.Erro("Usuário não encontrado - id.");
+          return Retorno<DetalhesModel>.Erro("Usuário não encontrado - id.");
 
         var hotelIdGuid = Guid.Parse(id);
 
         bool userHasPerm = await _utilsFacade.IsAdminOrManager(user.Id, hotelIdGuid);
 
         if (!userHasPerm)
-          return Retorno.Erro("Permissão do usuário não é admin/gerente deste hotel.");
+          return Retorno<DetalhesModel>.Erro("Permissão do usuário não é admin/gerente deste hotel.");
 
         var hotelId = Guid.Parse(id);
 
@@ -274,7 +274,7 @@ namespace Turify.Facades
             .FirstOrDefaultAsync(h => h.Id == hotelId);
 
         if (hotelExistente == null)
-          return Retorno.Erro("Hotel não encontrado.");
+          return Retorno<DetalhesModel>.Erro("Hotel não encontrado.");
 
         // Atualiza propriedades simples
         hotelExistente.Name = hotel.Name;
@@ -311,7 +311,7 @@ namespace Turify.Facades
 
         await _context.SaveChangesAsync();
 
-        return Retorno.Ok("Dados atualizados com sucesso!");
+        return Retorno<DetalhesModel>.Ok(hotelExistente);
       }
       catch (Exception e)
       {

@@ -58,6 +58,7 @@ builder.Services.AddTransient<HotelFacade>();
 builder.Services.AddTransient<QuartosFacade>();
 builder.Services.AddTransient<CategoryQuartosFacade>();
 builder.Services.AddTransient<UtilsFacade>();
+builder.Services.AddTransient<PhotosFacade>();
 
 // Registrar o Producer como singleton ou scoped
 builder.Services.AddSingleton<IRabbitMqProducer>(sp =>

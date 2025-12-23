@@ -73,25 +73,25 @@ namespace Turify.Facades
       }
     }
 
-    public async Task<IRetorno> PostQuartosFacade(QuartosModel quartos, string hotelId)
+    public async Task<IRetorno<QuartosModel>> PostQuartosFacade(QuartosModel quartos, string hotelId)
     {
       try
       {
         var userEmail = _googleAuthService.GetUserEmailFromToken();
 
         if (string.IsNullOrEmpty(userEmail))
-          return Retorno.Erro("Usuário não encontrado - email.");
+          return Retorno<QuartosModel>.Erro("Usuário não encontrado - email.");
 
         var user = await _utilsFacade.GetUserByEmail(userEmail);
 
         if (user == null || user.Id == Guid.Empty)
-          return Retorno.Erro("Usuário não encontrado - id.");
+          return Retorno<QuartosModel>.Erro("Usuário não encontrado - id.");
 
         var hotelGuid = Guid.Parse(hotelId);
 
         bool userHasPerm = await _utilsFacade.IsAdminOrManager(user.Id, hotelGuid);
         if (!userHasPerm)
-          return Retorno.Erro("Permissão do usuário não é admin/gerente deste hotel.");
+          return Retorno<QuartosModel>.Erro("Permissão do usuário não é admin/gerente deste hotel.");
 
         var quartoExistente = await _context.Quartos
                                             .Include(q => q.Category)
@@ -106,7 +106,7 @@ namespace Turify.Facades
           var ids = quartos.Category.Select(rc => rc.Id).ToList();
           var categoriesFromDb = await _context.CategoryQuarto.Where(c => ids.Contains(c.Id)).ToListAsync();
           if (categoriesFromDb.Count != ids.Count)
-            return Retorno.Erro("Uma ou mais categorias informadas não foram encontradas.");
+            return Retorno<QuartosModel>.Erro("Uma ou mais categorias informadas não foram encontradas.");
           resolvedCats = categoriesFromDb;
         }
 
@@ -139,7 +139,7 @@ namespace Turify.Facades
             quartoExistente.Category = new List<CategoryQuarto>();
 
           await _context.SaveChangesAsync();
-          return Retorno.Ok("Dados do quarto atualizados com sucesso.");
+          return Retorno<QuartosModel>.Ok(quartoExistente);
         }
 
         // INSERT
@@ -151,7 +151,7 @@ namespace Turify.Facades
         await _context.Quartos.AddAsync(quartos);
         await _context.SaveChangesAsync();
 
-        return Retorno.Ok("Dados foram registrados com sucesso.");
+        return Retorno<QuartosModel>.Ok(quartos);
       }
       catch (Exception e)
       {

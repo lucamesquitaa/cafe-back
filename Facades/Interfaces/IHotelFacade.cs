@@ -10,8 +10,8 @@ namespace Turify.Facades.Interfaces
     public Task<IRetorno<GetDetalheById>> GetDetalhesFacade(string hotelId);
     public Task<IRetorno<DetalhesModel>> GetDetalhesFacadeByManager(string hotelId);
     public Task<IRetorno<IEnumerable<GetAllHoteis>>> GetDetalhesUserFacade();
-    public Task<IRetorno> PostDetalhesFacade(DetalhesModel hotel);
-    public Task<IRetorno> PutDetalhesFacade(DetalhesModel hotel, string hotelId);
+    public Task<IRetorno<DetalhesModel>> PostDetalhesFacade(DetalhesModel hotel);
+    public Task<IRetorno<DetalhesModel>> PutDetalhesFacade(DetalhesModel hotel, string hotelId);
     public Task<IRetorno> DeleteDetalhesFacade(string id);
   }
 }

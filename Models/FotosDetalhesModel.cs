@@ -8,11 +8,11 @@ namespace Turify.Models
     [Key]
     public Guid Id { get; set; } = Guid.NewGuid();
   
-    public Guid DetalhesModelId { get; set; }
+    public Guid? DetalhesModelId { get; set; }
     [ForeignKey(nameof(DetalhesModelId))]
     public DetalhesModel? Detalhes { get; set; }
 
-    public Guid QuartosModelId { get; set; }
+    public Guid? QuartosModelId { get; set; }
     [ForeignKey(nameof(QuartosModelId))]
     public QuartosModel? Quartos { get; set; }
 

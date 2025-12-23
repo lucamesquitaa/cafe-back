@@ -18,4 +18,10 @@ public static class GoogleStorageExtensions
         };
     await client.UpdateObjectAsync(obj);
   }
+
+  public static string GenerateSignedUrl(string jsonServiceAccountPath, string bucketName, string objectName, TimeSpan validFor)
+  {
+    var signer = UrlSigner.FromServiceAccountPath(jsonServiceAccountPath);
+    return signer.Sign(bucketName, objectName, validFor, HttpMethod.Get);
+  }
 }
