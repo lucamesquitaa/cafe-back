@@ -117,7 +117,7 @@ namespace Turify.Controllers
       if (retorno.Sucesso == false)
         return BadRequest(retorno);   
 
-      var bucketName = "hotelaria-imgs";
+      var bucketName = "turify-imgs";
       var objetoNome = $"{retorno.Data.Name}/{file.FileName}_{Guid.NewGuid()}";
       // Busca o segredo no Secret Manager
       //HOMOLOG
