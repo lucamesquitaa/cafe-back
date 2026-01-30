@@ -13,6 +13,7 @@ namespace Turify.Models
 
     [ForeignKey(nameof(DetalhesModelId))]
     public DetalhesModel? Detalhes { get; set; }
+    public int Numero { get; set; }
     public string Name { get; set; } = string.Empty;
     public ICollection<CategoryQuarto> Category { get; set; } = new List<CategoryQuarto>();
     public string Description { get; set; } = string.Empty;
@@ -34,5 +35,7 @@ namespace Turify.Models
     public bool? Tv { get; set; }
     public string? TypeTv { get; set; }
     public ICollection<FotosDetalhesModel> Photos { get; set; } = new List<FotosDetalhesModel>();
+    public ICollection<QuartoReservas> Reservas { get; set; } = new List<QuartoReservas>();
+    public ICollection<QuartoAvailable> Disponibilidade { get; set; } = new List<QuartoAvailable>();
   }
 }

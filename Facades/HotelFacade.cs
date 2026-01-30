@@ -18,6 +18,7 @@ namespace Turify.Facades
     private readonly IRabbitMqProducer _producer;
     private readonly GoogleAuthService _googleAuthService;
     private readonly UtilsFacade _utilsFacade;
+    private PhotosFacade _photosFacade;
 
     // Implementation of IRetorno properties  
     public bool Sucesso { get; private set; }
@@ -25,12 +26,13 @@ namespace Turify.Facades
     public string? ExcecaoMensagem { get; private set; }
     public object? Data { get; private set; }
 
-    public HotelFacade(Context context, IRabbitMqProducer producer, GoogleAuthService googleAuthService, UtilsFacade utilsFacade)
+    public HotelFacade(Context context, IRabbitMqProducer producer, GoogleAuthService googleAuthService, UtilsFacade utilsFacade, PhotosFacade photosFacade )
     {
       _context = context;
       _producer = producer;
       _googleAuthService = googleAuthService;
       _utilsFacade = utilsFacade;
+      _photosFacade = photosFacade;
     }
 
     public async Task<IRetorno<IEnumerable<GetAllHoteis>>> GetAllFacade()
@@ -350,11 +352,12 @@ namespace Turify.Facades
         var permissoes = await _context.UsuarioPermissao.Where(x => x.DetalhesModelId == hotel.Id).ToListAsync();
         _context.UsuarioPermissao.RemoveRange(permissoes);
 
-        var fotos = await _context.Photos.Where(x => x.DetalhesModelId == hotel.Id).ToListAsync();
-        _context.Photos.RemoveRange(fotos);
+        var imageIds = await _context.Photos
+                                      .Where(p => p.DetalhesModelId == idGuid)
+                                      .Select(p => p.Id.ToString())
+                                      .ToListAsync();
 
-        var contatos = await _context.Contacts.Where(x => x.DetalhesModelId == hotel.Id).ToListAsync();
-        _context.Contacts.RemoveRange(contatos);
+        await _photosFacade.DeleteImagesAsync(imageIds);
 
         _context.Hotel.Remove(hotel);
         await _context.SaveChangesAsync();

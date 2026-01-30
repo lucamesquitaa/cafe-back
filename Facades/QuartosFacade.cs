@@ -1,9 +1,10 @@
-﻿using System;
+﻿using Google.Cloud.Storage.V1;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using Turify.Data;
 using Turify.Facades.Interfaces;
 using Turify.Models;
@@ -18,12 +19,14 @@ namespace Turify.Facades
     private readonly Context _context;
     private readonly GoogleAuthService _googleAuthService;
     private UtilsFacade _utilsFacade;
+    private PhotosFacade _photosFacade;
 
-    public QuartosFacade(Context context, GoogleAuthService googleAuthService, UtilsFacade utilsFacade)
+    public QuartosFacade(Context context, GoogleAuthService googleAuthService, UtilsFacade utilsFacade, PhotosFacade photosFacade)
     {
       _context = context;
       _googleAuthService = googleAuthService;
       _utilsFacade = utilsFacade;
+      _photosFacade = photosFacade;
     }
 
     // Implementation of IRetorno properties  
@@ -39,6 +42,8 @@ namespace Turify.Facades
         var hotelGuid = Guid.Parse(hotelId);
 
         var quartos = await _context.Quartos.Where(u => u.DetalhesModelId == hotelGuid)
+                                            .Include(q => q.Category)
+                                            .Include(q => q.Beds)
                                             .AsNoTracking()
                                             .ToListAsync();
 
@@ -113,6 +118,7 @@ namespace Turify.Facades
         if (quartoExistente != null)
         {
           // Atualiza campos comuns...
+          quartoExistente.Numero = quartos.Numero;
           quartoExistente.Name = quartos.Name;
           quartoExistente.Description = quartos.Description;
           quartoExistente.MaxOcupation = quartos.MaxOcupation;
@@ -185,6 +191,22 @@ namespace Turify.Facades
 
         if (quartoExistente == null)
           return Retorno.Erro("Quarto não encontrado.");
+
+        //deletar beds
+        // Carrega e deleta explicitamente os beds relacionados para evitar violação de FK
+        await _context.Entry(quartoExistente).Collection(q => q.Beds).LoadAsync();
+        if (quartoExistente.Beds != null && quartoExistente.Beds.Any())
+        {
+          _context.Set<BedsDTO>().RemoveRange(quartoExistente.Beds);
+          await _context.SaveChangesAsync();
+        }
+
+        var imageIds = await _context.Photos
+                                      .Where(p => p.QuartosModelId == quartoGuid)
+                                      .Select(p => p.Id.ToString())
+                                      .ToListAsync();
+
+        await _photosFacade.DeleteImagesAsync(imageIds);
 
         _context.Quartos.Remove(quartoExistente);
         await _context.SaveChangesAsync();

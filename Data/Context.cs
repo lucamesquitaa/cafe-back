@@ -13,6 +13,9 @@ namespace Turify.Data
     public DbSet<QuartosModel> Quartos { get; set; }
     public DbSet<CategoryQuarto> CategoryQuarto { get; set; }
     public DbSet<ErroLogModel> ErrorLogs { get; set; }
+    public DbSet<QuartoAvailable> QuartoAvailable { get; set; }
+    public DbSet<QuartoReservas> QuartoReservas { get; set; }
+    public DbSet<Hospedes> Hospedes { get; set; }
     public Context(DbContextOptions<Context> options) : base(options)
     {
     }
@@ -20,6 +23,13 @@ namespace Turify.Data
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
       base.OnModelCreating(modelBuilder);
+
+      // Relacionamento 1:N entre QuartoReservas e Hospedes
+      modelBuilder.Entity<QuartoReservas>()
+          .HasMany(qr => qr.Hospede)
+          .WithOne()
+          .HasForeignKey(h => h.ReservationId)
+          .OnDelete(DeleteBehavior.Restrict);
 
       //catalogo reutilizavel chamado CategoryQuarto
       modelBuilder.Entity<QuartosModel>()
@@ -67,7 +77,18 @@ namespace Turify.Data
           .HasForeignKey(c => c.UserModelId)
           .OnDelete(DeleteBehavior.Cascade);
 
+      //reservas
+      modelBuilder.Entity<QuartosModel>()
+         .HasMany(h => h.Disponibilidade)
+         .WithOne()
+         .HasForeignKey(p => p.QuartosModelId)
+         .OnDelete(DeleteBehavior.Cascade);
 
+      modelBuilder.Entity<QuartosModel>()
+         .HasMany(h => h.Reservas)
+         .WithOne()
+         .HasForeignKey(p => p.QuartosModelId)
+         .OnDelete(DeleteBehavior.Cascade);
     }
   }
 }

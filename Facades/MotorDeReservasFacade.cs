@@ -1,0 +1,515 @@
+﻿using Google.Apis.Auth.OAuth2;
+using Google.Cloud.Storage.V1;
+using Humanizer;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Identity.Client.Platforms.Features.DesktopOs.Kerberos;
+using NuGet.Protocol.Core.Types;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Security.AccessControl;
+using System.Text.Json;
+using Turify.Data;
+using Turify.Facades.Interfaces;
+using Turify.Models;
+using Turify.Models.DTOs;
+using Turify.Models.Enums;
+using Turify.Services;
+
+namespace Turify.Facades
+{
+  public class MotorDeReservasFacade : IMotorDeReservasFacade
+  {
+    private readonly Context _context;
+    private readonly GoogleAuthService _googleAuthService;
+    private UtilsFacade _utilsFacade;
+    private readonly IDistributedCache _redis;
+
+    public MotorDeReservasFacade(Context context, GoogleAuthService googleAuthService, UtilsFacade utilsFacade, IDistributedCache redis)
+    {
+      _context = context;
+      _googleAuthService = googleAuthService;
+      _utilsFacade = utilsFacade;
+      _redis = redis;
+    }
+
+    // Implementation of IRetorno properties 
+    public bool Sucesso { get; private set; }
+    public string? Mensagem { get; private set; }
+    public string? ExcecaoMensagem { get; private set; }
+    public object? Data { get; private set; }
+
+
+    public async Task<IRetorno<QuartoAvailable>> PostDisponibilidadeAsync([FromBody] AddDisponibilidadeDTO disponibilidade, string quartoId)
+    {
+      try
+      {
+        var userEmail = _googleAuthService.GetUserEmailFromToken();
+
+        if (string.IsNullOrEmpty(userEmail))
+          return Retorno<QuartoAvailable>.Erro("Usuário não encontrado - email.");
+
+        var user = await _utilsFacade.GetUserByEmail(userEmail);
+
+        if (user == null || user.Id == Guid.Empty)
+          return Retorno<QuartoAvailable>.Erro("Usuário não encontrado - id.");
+
+        Guid quartoGuid = new Guid(quartoId);
+
+        var quarto = await _context.Quartos.FirstOrDefaultAsync(q => q.Id == quartoGuid);
+
+        if (quarto == null || quarto.Id == Guid.Empty)
+          return Retorno<QuartoAvailable>.Erro("Quarto não encontrado.");
+
+        bool userHasPerm = await _utilsFacade.IsAdminOrManager(user.Id, quarto.DetalhesModelId);
+        if (!userHasPerm)
+          return Retorno<QuartoAvailable>.Erro("Permissão do usuário não é admin/gerente deste hotel.");
+
+        bool datasOK = await VerificaDatasOK(disponibilidade, quartoGuid);
+
+        if (!datasOK)
+          return Retorno<QuartoAvailable>.Erro("Já existe uma disponibilidade cadastrada para o período informado.");
+
+        QuartoAvailable obj = new QuartoAvailable
+        {
+          Name = quarto.Name,
+          isAvailable = disponibilidade.Status == (int)StatusReservaEnum.Disponivel,
+          Status = disponibilidade.Status,
+          StartDate = disponibilidade.StartDate,
+          EndDate = disponibilidade.EndDate,
+          DayPrice = disponibilidade.DayPrice,
+          MinDays = disponibilidade.MinDays,
+          MaxDays = disponibilidade.MaxDays,
+          Reembolsavel = disponibilidade.Reembolsavel,
+          QuartosModelId = quarto.Id,
+          ReservationId = 1111,
+        };
+        var cacheKey = $"availability:{quartoId}";
+        await _redis.RemoveAsync(cacheKey);
+        await _context.QuartoAvailable.AddAsync(obj);
+        await _context.SaveChangesAsync();
+
+        return Retorno<QuartoAvailable>.Ok(obj, "Disponibilidade adicionada com sucesso.");
+
+      }
+      catch (Exception e)
+      {
+        throw new ArgumentException(e.Message);
+      }
+    }
+
+    public async Task<IRetorno<QuartoAvailable>> PutDisponibilidadeDayAsync(UpdateDayDisponibilidadeDTO disponibilidadeDay, string quartoId)
+    {
+      try
+      {
+        var userEmail = _googleAuthService.GetUserEmailFromToken();
+
+        if (string.IsNullOrEmpty(userEmail))
+          return Retorno<QuartoAvailable>.Erro("Usuário não encontrado - email.");
+
+        var user = await _utilsFacade.GetUserByEmail(userEmail);
+
+        if (user == null || user.Id == Guid.Empty)
+          return Retorno<QuartoAvailable>.Erro("Usuário não encontrado - id.");
+
+        Guid quartoGuid = new Guid(quartoId);
+
+        var quarto = await _context.Quartos.FirstOrDefaultAsync(q => q.Id == quartoGuid);
+
+        if (quarto == null || quarto.Id == Guid.Empty)
+          return Retorno<QuartoAvailable>.Erro("Quarto não encontrado.");
+
+        bool userHasPerm = await _utilsFacade.IsAdminOrManager(user.Id, quarto.DetalhesModelId);
+        if (!userHasPerm)
+          return Retorno<QuartoAvailable>.Erro("Permissão do usuário não é admin/gerente deste hotel.");
+
+        // Parsing robusto: aceita "yyyy-MM-dd" e "dd/MM/yyyy" (com fallback para pt-BR).
+        if (string.IsNullOrWhiteSpace(disponibilidadeDay?.Day))
+          return Retorno<QuartoAvailable>.Erro("Dia inválido.");
+
+        DateTime disponiDayDate;
+        var dayStr = disponibilidadeDay.Day.Trim();
+        var formats = new[] { "yyyy-MM-dd", "dd/MM/yyyy", "MM/dd/yyyy" };
+
+        // Tenta invariant culture (ISO), depois pt-BR, depois tentativa genérica com pt-BR
+        if (!DateTime.TryParseExact(dayStr, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed)
+            && !DateTime.TryParseExact(dayStr, formats, new CultureInfo("pt-BR"), DateTimeStyles.None, out parsed)
+            && !DateTime.TryParse(dayStr, new CultureInfo("pt-BR"), DateTimeStyles.AssumeLocal, out parsed))
+        {
+          return Retorno<QuartoAvailable>.Erro("Formato de data inválido. Use yyyy-MM-dd ou dd/MM/yyyy.");
+        }
+
+        disponiDayDate = DateTime.SpecifyKind(parsed.Date, DateTimeKind.Utc);
+
+        // Normaliza o dia para o intervalo [00:00,23:59:59.999...]
+        var dayStart = disponiDayDate;
+        var dayEnd = disponiDayDate.Date.AddDays(1).AddTicks(-1);
+
+        // Todas as áreas que se sobrepõem ao dia (por dia)
+        var areaReserva = await _context.QuartoAvailable
+          .Where(d => d.QuartosModelId == quartoGuid && d.EndDate >= dayStart && d.StartDate <= dayEnd)
+          .OrderBy(d => d.StartDate)
+          .ToListAsync();
+
+        // Se não encontrar nenhuma área, retorna erro
+        if (areaReserva == null || areaReserva.Count == 0)
+          return Retorno<QuartoAvailable>.Erro("Nenhuma disponibilidade encontrada para o dia informado.");
+
+        foreach (var area in areaReserva)
+        {
+          // Remove a área original
+          _context.QuartoAvailable.Remove(area);
+
+          // Left
+          if (area.StartDate < dayStart)
+          {
+            var left = new QuartoAvailable
+            {
+              Name = area.Name,
+              isAvailable = area.isAvailable,
+              Status = area.Status,
+              StartDate = area.StartDate,
+              EndDate = dayStart.AddTicks(-1),
+              DayPrice = area.DayPrice,
+              MinDays = area.MinDays,
+              MaxDays = area.MaxDays,
+              Reembolsavel = area.Reembolsavel,
+              QuartosModelId = area.QuartosModelId
+            };
+            await _context.QuartoAvailable.AddAsync(left);
+          }
+
+          // Day (atualiza com os novos dados)
+          var daySegment = new QuartoAvailable
+          {
+            Name = area.Name,
+            isAvailable = true,
+            Status = (int)StatusReservaEnum.Disponivel,
+            StartDate = dayStart,
+            EndDate = dayEnd,
+            DayPrice = disponibilidadeDay.DayPrice,
+            MinDays = disponibilidadeDay.MinDays,
+            MaxDays = disponibilidadeDay.MaxDays,
+            Reembolsavel = true,
+            QuartosModelId = area.QuartosModelId
+          };
+          await _context.QuartoAvailable.AddAsync(daySegment);
+
+          // Right
+          if (area.EndDate > dayEnd)
+          {
+            var right = new QuartoAvailable
+            {
+              Name = area.Name,
+              isAvailable = area.isAvailable,
+              Status = area.Status,
+              StartDate = dayEnd.AddTicks(1),
+              EndDate = area.EndDate,
+              DayPrice = area.DayPrice,
+              MinDays = area.MinDays,
+              MaxDays = area.MaxDays,
+              Reembolsavel = area.Reembolsavel,
+              QuartosModelId = area.QuartosModelId
+            };
+            await _context.QuartoAvailable.AddAsync(right);
+          }
+
+        }
+
+        var cacheKey = $"availability:{quartoId}";
+        await _redis.RemoveAsync(cacheKey);
+        await _context.SaveChangesAsync();
+
+        return Retorno<QuartoAvailable>.Ok(null, "Disponibilidade atualizada com sucesso.");
+
+      }
+      catch (Exception e)
+      {
+        throw new ArgumentException(e.Message);
+      }
+    }
+
+    public async Task<IRetorno<IEnumerable<QuartoAvailable>>> GetDisponibilidadeAsync(string quartoId)
+    {
+      try
+      {
+        var cacheKey = $"availability:{quartoId}";
+
+        //1. Tenta buscar no cache
+        var cached = await _redis.GetStringAsync(cacheKey);
+        if (cached != null)
+        {
+          return Retorno<IEnumerable<QuartoAvailable>>.Ok(JsonSerializer.Deserialize<IEnumerable<QuartoAvailable>>(cached));
+        }
+
+        //2. Busca no banco (fonte de verdade)
+        Guid quartoGuid = new Guid(quartoId);
+        var disponibilidades = await _context.QuartoAvailable
+        .Where(qa => qa.QuartosModelId == quartoGuid)
+        .AsNoTracking()
+        .ToListAsync();
+
+        //3. Salva no cache com TTL curto
+        await _redis.SetStringAsync(
+        cacheKey,
+        JsonSerializer.Serialize(disponibilidades),
+        new DistributedCacheEntryOptions
+        {
+          AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(60)
+        });
+
+
+
+        return Retorno<IEnumerable<QuartoAvailable>>.Ok(disponibilidades, "Disponibilidades buscadas com sucesso.");
+      }
+      catch (Exception e)
+      {
+        throw new ArgumentException(e.Message);
+      }
+    }
+
+    public async Task<IRetorno<QuartoReservas>> PostReservaAsync([FromBody] AddReservaDTO reserva, string quartoId)
+    {
+      try
+      {
+        var userEmail = _googleAuthService.GetUserEmailFromToken();
+
+        if (string.IsNullOrEmpty(userEmail))
+          return Retorno<QuartoReservas>.Erro("Usuário não encontrado - email.");
+
+        var user = await _utilsFacade.GetUserByEmail(userEmail);
+
+        if (user == null || user.Id == Guid.Empty)
+          return Retorno<QuartoReservas>.Erro("Usuário não encontrado - id.");
+
+        Guid quartoGuid = new Guid(quartoId);
+
+        var quarto = await _context.Quartos.FirstOrDefaultAsync(q => q.Id == quartoGuid);
+
+        if (quarto == null || quarto.Id == Guid.Empty)
+          return Retorno<QuartoReservas>.Erro("Quarto não encontrado.");
+
+        bool userHasPerm = await _utilsFacade.IsAdminOrManager(user.Id, quarto.DetalhesModelId);
+        if (!userHasPerm)
+          return Retorno<QuartoReservas>.Erro("Permissão do usuário não é admin/gerente deste hotel.");
+
+        bool datasOK = await VerificaDatasReserva(reserva, quartoGuid);
+
+        if (!datasOK)
+          return Retorno<QuartoReservas>.Erro("Verifique a disponibilidade para o período informado.");
+
+        QuartoReservas obj = new QuartoReservas
+        {
+          QuartosModelId = quarto.Id,
+          ReservaStatus = (int)reserva.ReservaStatus,
+          Checkin = reserva.Checkin,
+          Checkout = reserva.Checkout,
+          EarlyCheckin = reserva.EarlyCheckin ?? false,
+          LateCheckout = reserva.LateCheckout ?? false,
+          Adults = reserva.Adults,
+          Kids = reserva.Kids,
+          Cupom = reserva.Cupom,
+          PriceTotal = reserva.PriceTotal,
+          CreatedAt = DateTime.UtcNow,
+        };
+
+        // Todas as áreas que se sobrepõem ao período (por tempo)
+        var areaReserva = _context.QuartoAvailable
+          .Where(d => d.QuartosModelId == quartoGuid && d.EndDate >= reserva.Checkin && d.StartDate <= reserva.Checkout)
+          .OrderBy(d => d.StartDate)
+          .ToList();
+
+        if (areaReserva == null || areaReserva.Count == 0)
+          return Retorno<QuartoReservas>.Erro("Verifique se existe cadastro para o período informado.");
+
+        if (areaReserva.Select(areaReserva => areaReserva.isAvailable).Any(isAvailable => !isAvailable))
+          return Retorno<QuartoReservas>.Erro("Verifique a disponibilidade para o período informado.");
+
+        if(areaReserva.Select(areaReserva => areaReserva.MinDays).Any(minDays => (reserva.Checkout.Date - reserva.Checkin.Date).TotalDays < minDays))
+          return Retorno<QuartoReservas>.Erro("O período reservado é menor que o mínimo permitido para o período.");
+
+        if((areaReserva.Select(areaReserva => areaReserva.MaxDays).Any(max => max != 0 && (reserva.Checkout.Date - reserva.Checkin.Date).TotalDays > max)))
+          return Retorno<QuartoReservas>.Erro("O período reservado é maior que o máximo permitido para o período.");
+
+        foreach (var area in areaReserva)
+        {
+          // Remove a área original
+          _context.QuartoAvailable.Remove(area);
+
+          // Agora tratamos por dias e incluímos a data de checkout como dia reservado.
+          var nightStart = reserva.Checkin.Date;
+          var nightEnd = reserva.Checkout.Date; // <-- include checkout date
+
+          // Interseção em dias entre a área e a reserva
+          var overlapNightStart = area.StartDate.Date > nightStart ? area.StartDate.Date : nightStart;
+          var overlapNightEnd = area.EndDate.Date < nightEnd ? area.EndDate.Date : nightEnd;
+
+          // Se não houve interseção por dias mas houve por horário, marque ao menos a noite de checkin
+          bool hasTimeOverlap = area.EndDate >= reserva.Checkin && area.StartDate <= reserva.Checkout;
+          if (overlapNightStart > overlapNightEnd && hasTimeOverlap)
+          {
+            overlapNightStart = reserva.Checkin.Date;
+            overlapNightEnd = overlapNightStart;
+          }
+
+          if (overlapNightStart > overlapNightEnd)
+            continue;
+
+          // Boundaries em DateTime para banco (bookedStart = 00:00 do dia; bookedEnd = fim do dia)
+          var bookedStart = overlapNightStart;
+          var bookedEnd = overlapNightEnd.AddDays(1).AddTicks(-1);
+
+          // Left
+          if (area.StartDate < bookedStart)
+          {
+            var left = new QuartoAvailable
+            {
+              Name = area.Name,
+              isAvailable = area.isAvailable,
+              Status = area.Status,
+              StartDate = area.StartDate,
+              EndDate = bookedStart.AddTicks(-1),
+              DayPrice = area.DayPrice,
+              MinDays = area.MinDays,
+              MaxDays = area.MaxDays,
+              Reembolsavel = area.Reembolsavel,
+              QuartosModelId = area.QuartosModelId
+            };
+            await _context.QuartoAvailable.AddAsync(left);
+          }
+
+          // Booked (indisponível)
+          var bookedSegment = new QuartoAvailable
+          {
+            Name = area.Name,
+            isAvailable = false,
+            Status = (int)StatusReservaEnum.AguardandoPagamento,
+            StartDate = bookedStart,
+            EndDate = bookedEnd,
+            DayPrice = area.DayPrice,
+            MinDays = area.MinDays,
+            MaxDays = area.MaxDays,
+            Reembolsavel = area.Reembolsavel,
+            QuartosModelId = area.QuartosModelId
+          };
+          await _context.QuartoAvailable.AddAsync(bookedSegment);
+
+          // Right
+          if (area.EndDate > bookedEnd)
+          {
+            var right = new QuartoAvailable
+            {
+              Name = area.Name,
+              isAvailable = area.isAvailable,
+              Status = area.Status,
+              StartDate = bookedEnd.AddTicks(1),
+              EndDate = area.EndDate,
+              DayPrice = area.DayPrice,
+              MinDays = area.MinDays,
+              MaxDays = area.MaxDays,
+              Reembolsavel = area.Reembolsavel,
+              QuartosModelId = area.QuartosModelId
+            };
+            await _context.QuartoAvailable.AddAsync(right);
+          }
+        }
+        var cacheKey = $"availability:{quartoId}";
+        await _redis.RemoveAsync(cacheKey);
+        await _context.QuartoReservas.AddAsync(obj);
+        await _context.SaveChangesAsync();
+
+        return Retorno<QuartoReservas>.Ok(obj, "Reserva criada com sucesso.");
+      }
+      catch (Exception e)
+      {
+        throw new ArgumentException(e.Message);
+      }
+    }
+
+    public async Task<IRetorno<IEnumerable<QuartoReservas>>> GetReservaAsync(string quartoId)
+    {
+      try
+      {
+        var userEmail = _googleAuthService.GetUserEmailFromToken();
+
+        if (string.IsNullOrEmpty(userEmail))
+          return Retorno<IEnumerable<QuartoReservas>>.Erro("Usuário não encontrado - email.");
+
+        var user = await _utilsFacade.GetUserByEmail(userEmail);
+
+        if (user == null || user.Id == Guid.Empty)
+          return Retorno<IEnumerable<QuartoReservas>>.Erro("Usuário não encontrado - id.");
+
+        Guid quartoGuid = new Guid(quartoId);
+
+        var quarto = await _context.Quartos.FirstOrDefaultAsync(q => q.Id == quartoGuid);
+
+        if (quarto == null || quarto.Id == Guid.Empty)
+          return Retorno<IEnumerable<QuartoReservas>>.Erro("Quarto não encontrado.");
+
+        bool userHasPerm = await _utilsFacade.IsAdminOrManager(user.Id, quarto.DetalhesModelId);
+        if (!userHasPerm)
+          return Retorno<IEnumerable<QuartoReservas>>.Erro("Permissão do usuário não é admin/gerente deste hotel.");
+
+        var reservas = await _context.QuartoReservas
+        .Where(qa => qa.QuartosModelId == quartoGuid)
+        .AsNoTracking()
+        .ToListAsync();
+
+        return Retorno<IEnumerable<QuartoReservas>>.Ok(reservas, "reservas buscadas com sucesso.");
+      }
+      catch (Exception e)
+      {
+        throw new ArgumentException(e.Message);
+      }
+    }
+
+    public async Task<bool> VerificaDatasOK(AddDisponibilidadeDTO disponibilidade, Guid quartoId)
+    {
+      var disponiExistente = await _context.QuartoAvailable.Where(d =>
+      d.QuartosModelId == quartoId &&
+      d.StartDate <= disponibilidade.EndDate &&
+      d.EndDate >= disponibilidade.StartDate
+      ).ToListAsync();
+      if (disponiExistente != null && disponiExistente.Count > 0)
+        return false;
+      else
+        return true;
+    }
+
+    public async Task<bool> VerificaDatasReserva(AddReservaDTO reserva, Guid quartoId)
+    {
+      // Cobertura por dias; incluir a data de checkout
+      var overlapping = await _context.QuartoAvailable
+        .Where(d => d.QuartosModelId == quartoId && d.EndDate >= reserva.Checkin && d.StartDate <= reserva.Checkout)
+        .OrderBy(d => d.StartDate)
+        .ToListAsync();
+
+      if (overlapping == null || overlapping.Count == 0)
+        return false;
+
+      DateTime current = reserva.Checkin.Date;
+      DateTime lastNight = reserva.Checkout.Date; // <-- incluir checkout
+
+      foreach (var seg in overlapping)
+      {
+        if (!seg.isAvailable)
+          return false;
+
+        if (seg.StartDate.Date > current)
+          return false;
+
+        if (seg.EndDate.Date >= current)
+        {
+          current = seg.EndDate.Date.AddDays(1);
+        }
+
+        if (current > lastNight)
+          return true;
+      }
+
+      return current > lastNight;
+    }
+  }
+}
