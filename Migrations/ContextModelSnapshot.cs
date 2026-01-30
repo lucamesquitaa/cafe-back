@@ -312,6 +312,179 @@ namespace Turify.Migrations
                     b.ToTable("Photos");
                 });
 
+            modelBuilder.Entity("Turify.Models.Hospedes", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("BloodType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CEP")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CPF")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Complement")
+                        .HasColumnType("text");
+
+                    b.Property<string>("DateBirth")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FamilyName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("ReservationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ReservationId1")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReservationId");
+
+                    b.HasIndex("ReservationId1");
+
+                    b.ToTable("Hospedes");
+                });
+
+            modelBuilder.Entity("Turify.Models.QuartoAvailable", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<double>("DayPrice")
+                        .HasColumnType("double precision");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("MaxDays")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MinDays")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("QuartosId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("QuartosModelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Reembolsavel")
+                        .HasColumnType("boolean");
+
+                    b.Property<int?>("ReservationId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("isAvailable")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuartosId");
+
+                    b.HasIndex("QuartosModelId");
+
+                    b.ToTable("QuartoAvailable");
+                });
+
+            modelBuilder.Entity("Turify.Models.QuartoReservas", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Adults")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("Checkin")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("Checkout")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Cupom")
+                        .HasColumnType("text");
+
+                    b.Property<bool?>("EarlyCheckin")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Kids")
+                        .HasColumnType("integer");
+
+                    b.Property<bool?>("LateCheckout")
+                        .HasColumnType("boolean");
+
+                    b.Property<double>("PriceTotal")
+                        .HasColumnType("double precision");
+
+                    b.Property<Guid?>("QuartosId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("QuartosModelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ReservaStatus")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuartosId");
+
+                    b.HasIndex("QuartosModelId");
+
+                    b.ToTable("QuartoReservas");
+                });
+
             modelBuilder.Entity("Turify.Models.QuartosModel", b =>
                 {
                     b.Property<Guid>("Id")
@@ -356,6 +529,9 @@ namespace Turify.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<int>("Numero")
+                        .HasColumnType("integer");
 
                     b.Property<bool?>("Refund")
                         .HasColumnType("boolean");
@@ -534,6 +710,48 @@ namespace Turify.Migrations
                     b.Navigation("Quartos");
                 });
 
+            modelBuilder.Entity("Turify.Models.Hospedes", b =>
+                {
+                    b.HasOne("Turify.Models.QuartoReservas", null)
+                        .WithMany("Hospede")
+                        .HasForeignKey("ReservationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Turify.Models.QuartoReservas", "Reservation")
+                        .WithMany()
+                        .HasForeignKey("ReservationId1");
+
+                    b.Navigation("Reservation");
+                });
+
+            modelBuilder.Entity("Turify.Models.QuartoAvailable", b =>
+                {
+                    b.HasOne("Turify.Models.QuartosModel", "Quartos")
+                        .WithMany()
+                        .HasForeignKey("QuartosId");
+
+                    b.HasOne("Turify.Models.QuartosModel", null)
+                        .WithMany("Disponibilidade")
+                        .HasForeignKey("QuartosModelId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Quartos");
+                });
+
+            modelBuilder.Entity("Turify.Models.QuartoReservas", b =>
+                {
+                    b.HasOne("Turify.Models.QuartosModel", "Quartos")
+                        .WithMany()
+                        .HasForeignKey("QuartosId");
+
+                    b.HasOne("Turify.Models.QuartosModel", null)
+                        .WithMany("Reservas")
+                        .HasForeignKey("QuartosModelId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Quartos");
+                });
+
             modelBuilder.Entity("Turify.Models.QuartosModel", b =>
                 {
                     b.HasOne("Turify.Models.DetalhesModel", "Detalhes")
@@ -583,11 +801,20 @@ namespace Turify.Migrations
                     b.Navigation("Quartos");
                 });
 
+            modelBuilder.Entity("Turify.Models.QuartoReservas", b =>
+                {
+                    b.Navigation("Hospede");
+                });
+
             modelBuilder.Entity("Turify.Models.QuartosModel", b =>
                 {
                     b.Navigation("Beds");
 
+                    b.Navigation("Disponibilidade");
+
                     b.Navigation("Photos");
+
+                    b.Navigation("Reservas");
                 });
 
             modelBuilder.Entity("Turify.Models.UserModel", b =>

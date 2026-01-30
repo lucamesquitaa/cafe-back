@@ -2,33 +2,6 @@
 
 namespace Turify.Models.Enums
 {
-  public enum CategoryHotelModel
-  {
-    [Description("Hotel")]
-    Day = 1,
-    [Description("Toda semana")]
-    Week = 2,
-    [Description("Não")]
-    None = 3,
-  }
-  public enum EstadoMetaModel
-  {
-    [Description("Concluído")]
-    Concluido = 1,
-    [Description("Em andamento")]
-    EmAndamento = 2,
-  }
-  public enum HorarioMetaModel
-  {
-    [Description("Manhã")]
-    Manha = 1,
-    [Description("Tarde")]
-    Tarde = 2,
-    [Description("Noite")]
-    Noite = 3,
-    [Description("Dia inteiro")]
-    DiaInteiro = 4,
-  }
   public enum BedTypeEnum
   {
     [Description("Solteiro")]
@@ -44,6 +17,39 @@ namespace Turify.Models.Enums
     [Description("Berco")]
     Berco = 6,
   }
+
+  public enum StatusReservaEnum
+  {
+    [Description("Disponível")]
+    Disponivel = 1,
+    [Description("Pré-Reserva")]
+    PreReserva = 2,
+    [Description("Aguardando pagamento")]
+    AguardandoPagamento = 3,
+    [Description("Bloqueado")]
+    Bloqueado = 4,
+    [Description("Confirmada")]
+    Confirmada = 5,
+  }
+
+  public enum StatusHospedeReservaEnum
+  {
+    [Description("Pagamento pendente")]
+    PagamentoPendente = 1,
+    [Description("Pagamento confirmado")]
+    PagamentoConfirmado = 2,
+    [Description("Check-in realizado")]
+    CheckInRealizado = 3,
+    [Description("Check-out realizado")]
+    CheckOutRealizado = 4,
+    [Description("Cancelado pelo hotel")]
+    CanceladaHotel = 5,
+    [Description("Cancelado pelo usuário")]
+    CanceladaUsuario = 6,
+    [Description("Não comparecimento")]
+    NaoComparecimento = 7,
+  }
+
   public class RoleUserModel
   {
     public const string User = "User";
