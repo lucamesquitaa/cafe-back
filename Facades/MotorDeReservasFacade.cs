@@ -294,11 +294,6 @@ namespace Turify.Facades
         if (!userHasPerm)
           return Retorno<QuartoReservas>.Erro("Permissão do usuário não é admin/gerente deste hotel.");
 
-        bool datasOK = await VerificaDatasReserva(reserva, quartoGuid);
-
-        if (!datasOK)
-          return Retorno<QuartoReservas>.Erro("Verifique a disponibilidade para o período informado.");
-
         QuartoReservas obj = new QuartoReservas
         {
           QuartosModelId = quarto.Id,
@@ -315,16 +310,67 @@ namespace Turify.Facades
         };
 
         // Todas as áreas que se sobrepõem ao período (por tempo)
-        var areaReserva = _context.QuartoAvailable
+        var areaReserva = await _context.QuartoAvailable
           .Where(d => d.QuartosModelId == quartoGuid && d.EndDate >= reserva.Checkin && d.StartDate <= reserva.Checkout)
           .OrderBy(d => d.StartDate)
-          .ToList();
+          .ToListAsync();
 
-        if (areaReserva == null || areaReserva.Count == 0)
+        if (areaReserva == null || areaReserva.Count ==0)
           return Retorno<QuartoReservas>.Erro("Verifique se existe cadastro para o período informado.");
 
-        if (areaReserva.Select(areaReserva => areaReserva.isAvailable).Any(isAvailable => !isAvailable))
-          return Retorno<QuartoReservas>.Erro("Verifique a disponibilidade para o período informado.");
+        // Não permitir EarlyCheckin se já existir qualquer checkout na mesma data
+        if (reserva.EarlyCheckin == true)
+        {
+          var hasAnyCheckoutOnCheckinDate = await _context.QuartoReservas
+            .AnyAsync(r => r.QuartosModelId == quartoGuid && r.Checkout.Date == reserva.Checkin.Date);
+
+          if (hasAnyCheckoutOnCheckinDate)
+            return Retorno<QuartoReservas>.Erro("Early check-in não permitido: já existe checkout na mesma data.");
+        }
+
+        // Tratamento especial: permitir que o checkin coincida com o checkout de outra reserva
+        // desde que não exista uma reserva com LateCheckout = true para essa data.
+        bool hasLateCheckoutOnCheckinDate = await _context.QuartoReservas
+          .AnyAsync(r => r.QuartosModelId == quartoGuid && r.Checkout.Date == reserva.Checkin.Date && (r.LateCheckout ?? false));
+
+        if (hasLateCheckoutOnCheckinDate)
+        {
+          // Se houver late checkout na data de checkin, qualquer segmento indisponível bloqueia.
+          if (areaReserva.Any(a => !a.isAvailable))
+            return Retorno<QuartoReservas>.Erro("Verifique a disponibilidade para o período informado.");
+        }
+        else
+        {
+          // Se não houver late checkout, podemos ignorar colisões que sejam apenas o dia de checkin
+          var nonAvailable = areaReserva.Where(a => !a.isAvailable).ToList();
+          bool blocked = false;
+          foreach (var area in nonAvailable)
+          {
+            // Calcula interseção por dias (mesma lógica usada ao criar segmentos)
+            var nightStart = reserva.Checkin.Date;
+            var nightEnd = reserva.Checkout.Date;
+
+            var overlapNightStart = area.StartDate.Date > nightStart ? area.StartDate.Date : nightStart;
+            var overlapNightEnd = area.EndDate.Date < nightEnd ? area.EndDate.Date : nightEnd;
+
+            bool hasTimeOverlap = area.EndDate >= reserva.Checkin && area.StartDate <= reserva.Checkout;
+            if (overlapNightStart > overlapNightEnd && hasTimeOverlap)
+            {
+              overlapNightStart = reserva.Checkin.Date;
+              overlapNightEnd = overlapNightStart;
+            }
+
+            // Se a interseção for apenas a noite de checkin (um único dia igual ao checkin), ignoramos esse conflito.
+            if (!(overlapNightStart == overlapNightEnd && overlapNightStart == reserva.Checkin.Date))
+            {
+              blocked = true;
+              break;
+            }
+          }
+
+          if (blocked)
+            return Retorno<QuartoReservas>.Erro("Verifique a disponibilidade para o período informado.");
+        }
 
         if(areaReserva.Select(areaReserva => areaReserva.MinDays).Any(minDays => (reserva.Checkout.Date - reserva.Checkin.Date).TotalDays < minDays))
           return Retorno<QuartoReservas>.Erro("O período reservado é menor que o mínimo permitido para o período.");
@@ -427,7 +473,7 @@ namespace Turify.Facades
       }
     }
 
-    public async Task<IRetorno<IEnumerable<QuartoReservas>>> GetReservaAsync(string quartoId)
+    public async Task<IRetorno> PutReservaAsync(UpdateReservaDTO updatedReserva, string quartoId)
     {
       try
       {
@@ -452,12 +498,122 @@ namespace Turify.Facades
         if (!userHasPerm)
           return Retorno<IEnumerable<QuartoReservas>>.Erro("Permissão do usuário não é admin/gerente deste hotel.");
 
+        Guid reservaGuid = new Guid(updatedReserva.ReservaId);
+        var reserva = await _context.QuartoReservas.FirstOrDefaultAsync(r => r.Id == reservaGuid);
+
+        if (reserva == null || reserva.Id == Guid.Empty)
+          return Retorno<IEnumerable<QuartoReservas>>.Erro("Reserva não encontrada.");
+
+        reserva.ReservaStatus = (int)updatedReserva.ReservaStatus;
+        reserva.Adults = updatedReserva.Adults;
+        reserva.Kids = updatedReserva.Kids;
+        reserva.PriceTotal = updatedReserva.PriceTotal;
+        // 1. Remover hóspedes existentes e salvar imediatamente
+        var hospedesExistentes = await _context.Hospedes
+            .Where(h => h.ReservationId == reservaGuid)
+            .ToListAsync();
+
+        if (hospedesExistentes.Any())
+        {
+          _context.Hospedes.RemoveRange(hospedesExistentes);
+          await _context.SaveChangesAsync(); // IMPORTANTE: Salvar antes de adicionar novos
+        }
+
+        // 2. Adicionar os novos hóspedes
+        var novosHospedes = updatedReserva.Hospede.Select(h => new Hospedes
+        {
+          ReservationId = reservaGuid,
+          Name = h.Name,
+          FamilyName = h.FamilyName,
+          Email = h.Email,
+          CPF = h.CPF,
+          Phone = h.Phone,
+          DateBirth = h.DateBirth,
+          CEP = h.CEP,
+          State = h.State,
+          City = h.City,
+          Address = h.Address,
+          Complement = h.Complement,
+          BloodType = h.BloodType,
+          Principal = h.Principal,
+          TextArea = h.TextArea
+        }).ToList();
+
+        await _context.Hospedes.AddRangeAsync(novosHospedes);
+
+        await _context.SaveChangesAsync();
+        return Retorno.Ok(null, "Reserva atualizada com sucesso.");
+      }
+      catch (Exception e)
+      {
+        throw new ArgumentException(e.Message);
+      }
+    }
+
+    public async Task<IRetorno<IEnumerable<RetornoReservasDTO>>> GetReservaAsync(string quartoId)
+    {
+      try
+      {
+        var userEmail = _googleAuthService.GetUserEmailFromToken();
+
+        if (string.IsNullOrEmpty(userEmail))
+          return Retorno<IEnumerable<RetornoReservasDTO>>.Erro("Usuário não encontrado - email.");
+
+        var user = await _utilsFacade.GetUserByEmail(userEmail);
+
+        if (user == null || user.Id == Guid.Empty)
+          return Retorno<IEnumerable<RetornoReservasDTO>>.Erro("Usuário não encontrado - id.");
+
+        Guid quartoGuid = new Guid(quartoId);
+
+        var quarto = await _context.Quartos.FirstOrDefaultAsync(q => q.Id == quartoGuid);
+
+        if (quarto == null || quarto.Id == Guid.Empty)
+          return Retorno<IEnumerable<RetornoReservasDTO>>.Erro("Quarto não encontrado.");
+
+        bool userHasPerm = await _utilsFacade.IsAdminOrManager(user.Id, quarto.DetalhesModelId);
+        if (!userHasPerm)
+          return Retorno<IEnumerable<RetornoReservasDTO>>.Erro("Permissão do usuário não é admin/gerente deste hotel.");
+
         var reservas = await _context.QuartoReservas
         .Where(qa => qa.QuartosModelId == quartoGuid)
+        .Include(h => h.Hospede)
+        .Select(r => new RetornoReservasDTO
+        {
+          Id = r.Id.ToString(),
+          QuartosModelId = r.QuartosModelId.ToString(),
+          ReservaStatus = r.ReservaStatus,
+          Checkin = r.Checkin,
+          Checkout = r.Checkout,
+          EarlyCheckin = r.EarlyCheckin,
+          LateCheckout = r.LateCheckout,
+          Adults = r.Adults,
+          Kids = r.Kids,
+          Cupom = r.Cupom,
+          PriceTotal = r.PriceTotal,
+          CreatedAt = r.CreatedAt,
+          Hospede = r.Hospede.Select(h => new HospedeDTO
+          {
+            Name = h.Name,
+            FamilyName = h.FamilyName,
+            Email = h.Email,
+            CPF = h.CPF,
+            Phone = h.Phone,
+            DateBirth = h.DateBirth,
+            CEP = h.CEP,
+            State = h.State,
+            City = h.City,
+            Address = h.Address,
+            Complement = h.Complement,
+            BloodType = h.BloodType,
+            Principal = h.Principal,
+            TextArea = h.TextArea
+          }).ToList()
+        })
         .AsNoTracking()
         .ToListAsync();
 
-        return Retorno<IEnumerable<QuartoReservas>>.Ok(reservas, "reservas buscadas com sucesso.");
+        return Retorno<IEnumerable<RetornoReservasDTO>>.Ok(reservas, "reservas buscadas com sucesso.");
       }
       catch (Exception e)
       {

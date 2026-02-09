@@ -25,11 +25,11 @@ namespace Turify.Data
       base.OnModelCreating(modelBuilder);
 
       // Relacionamento 1:N entre QuartoReservas e Hospedes
-      modelBuilder.Entity<QuartoReservas>()
-          .HasMany(qr => qr.Hospede)
-          .WithOne()
-          .HasForeignKey(h => h.ReservationId)
-          .OnDelete(DeleteBehavior.Restrict);
+      modelBuilder.Entity<Hospedes>()
+        .HasOne(h => h.Reservation)
+        .WithMany(r => r.Hospede)
+        .HasForeignKey(h => h.ReservationId)
+        .OnDelete(DeleteBehavior.Cascade);
 
       //catalogo reutilizavel chamado CategoryQuarto
       modelBuilder.Entity<QuartosModel>()

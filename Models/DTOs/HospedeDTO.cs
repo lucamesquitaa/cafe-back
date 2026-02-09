@@ -1,13 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Turify.Models
+namespace Turify.Models.DTOs
 {
-  public class Hospedes
+  public class HospedeDTO
   {
-    public Guid Id { get; set; } = Guid.NewGuid();
-    public Guid? ReservationId { get; set; }
-    [ForeignKey(nameof(ReservationId))]
-    public QuartoReservas? Reservation { get; set; }
+    public string? ReservationId { get; set; }
     public string Name { get; set; } = String.Empty;
     public string FamilyName { get; set; } = String.Empty;
     public string Email { get; set; } = String.Empty;
