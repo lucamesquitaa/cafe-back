@@ -67,6 +67,18 @@ namespace Turify.Controllers
     }
 
     [Authorize]
+    [HttpPut("{quartoId}/UpdateReserva")]
+    public async Task<IActionResult> UpdateReserva([FromBody] UpdateReservaDTO updatedReserva, string quartoId)
+    {
+      var retorno = await _facade.PutReservaAsync(updatedReserva, quartoId);
+
+      if (retorno == null)
+        return BadRequest();
+
+      return retorno.Sucesso ? Ok(retorno) : BadRequest(retorno);
+    }
+
+    [Authorize]
     [HttpGet("{quartoId}/Reserva")]
     public async Task<IActionResult> GetReserva(string quartoId)
     {
