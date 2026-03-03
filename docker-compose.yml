@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   postgres:
-    image: postgres  # especifica a versao para mais previsibilidade
+    image: postgres:16  # especifica a versao para mais previsibilidade
     container_name: postgres_local
     restart: always
     environment:
@@ -15,7 +15,7 @@ services:
       - ./postgres-data:/var/lib/postgresql/data
 
   pgadmin:
-    image: dpage/pgadmin4
+    image: dpage/pgadmin4:8
     container_name: pgadmin_local
     restart: always
     environment:
