@@ -12,8 +12,8 @@ using Turify.Data;
 namespace Turify.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20260105231009_numquarto")]
-    partial class numquarto
+    [Migration("20260303023453_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -315,6 +315,74 @@ namespace Turify.Migrations
                     b.ToTable("Photos");
                 });
 
+            modelBuilder.Entity("Turify.Models.Hospedes", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("BloodType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CEP")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CPF")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Complement")
+                        .HasColumnType("text");
+
+                    b.Property<string>("DateBirth")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FamilyName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool?>("Principal")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("ReservationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("TextArea")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReservationId");
+
+                    b.ToTable("Hospedes");
+                });
+
             modelBuilder.Entity("Turify.Models.QuartoAvailable", b =>
                 {
                     b.Property<Guid>("Id")
@@ -337,6 +405,9 @@ namespace Turify.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("Number")
+                        .HasColumnType("integer");
+
                     b.Property<Guid?>("QuartosId")
                         .HasColumnType("uuid");
 
@@ -346,11 +417,17 @@ namespace Turify.Migrations
                     b.Property<bool>("Reembolsavel")
                         .HasColumnType("boolean");
 
+                    b.Property<int?>("ReservationId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("isAvailable")
+                        .HasColumnType("boolean");
 
                     b.HasKey("Id");
 
@@ -370,10 +447,6 @@ namespace Turify.Migrations
                     b.Property<int>("Adults")
                         .HasColumnType("integer");
 
-                    b.Property<string>("CPF")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("Checkin")
                         .HasColumnType("timestamp with time zone");
 
@@ -386,34 +459,14 @@ namespace Turify.Migrations
                     b.Property<string>("Cupom")
                         .HasColumnType("text");
 
-                    b.Property<string>("DateBirth")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("DetalhesModelId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("FamilyName")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<bool?>("EarlyCheckin")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("Kids")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Phone")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<double>("PriceDay")
-                        .HasColumnType("double precision");
+                    b.Property<bool?>("LateCheckout")
+                        .HasColumnType("boolean");
 
                     b.Property<double>("PriceTotal")
                         .HasColumnType("double precision");
@@ -424,15 +477,10 @@ namespace Turify.Migrations
                     b.Property<Guid?>("QuartosModelId")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("SubStatus")
+                    b.Property<int>("ReservaStatus")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("DetalhesModelId");
 
                     b.HasIndex("QuartosId");
 
@@ -666,6 +714,16 @@ namespace Turify.Migrations
                     b.Navigation("Quartos");
                 });
 
+            modelBuilder.Entity("Turify.Models.Hospedes", b =>
+                {
+                    b.HasOne("Turify.Models.QuartoReservas", "Reservation")
+                        .WithMany("Hospede")
+                        .HasForeignKey("ReservationId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Reservation");
+                });
+
             modelBuilder.Entity("Turify.Models.QuartoAvailable", b =>
                 {
                     b.HasOne("Turify.Models.QuartosModel", "Quartos")
@@ -682,12 +740,6 @@ namespace Turify.Migrations
 
             modelBuilder.Entity("Turify.Models.QuartoReservas", b =>
                 {
-                    b.HasOne("Turify.Models.DetalhesModel", "Detalhes")
-                        .WithMany()
-                        .HasForeignKey("DetalhesModelId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Turify.Models.QuartosModel", "Quartos")
                         .WithMany()
                         .HasForeignKey("QuartosId");
@@ -696,8 +748,6 @@ namespace Turify.Migrations
                         .WithMany("Reservas")
                         .HasForeignKey("QuartosModelId")
                         .OnDelete(DeleteBehavior.Cascade);
-
-                    b.Navigation("Detalhes");
 
                     b.Navigation("Quartos");
                 });
@@ -749,6 +799,11 @@ namespace Turify.Migrations
                     b.Navigation("Photos");
 
                     b.Navigation("Quartos");
+                });
+
+            modelBuilder.Entity("Turify.Models.QuartoReservas", b =>
+                {
+                    b.Navigation("Hospede");
                 });
 
             modelBuilder.Entity("Turify.Models.QuartosModel", b =>
