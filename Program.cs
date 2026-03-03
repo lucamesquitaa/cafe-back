@@ -69,7 +69,7 @@ builder.Services.AddSingleton<IRabbitMqProducer>(sp =>
 ));
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<GoogleAuthService>();
-var connectionString = "Host=149.57.203.34;Port=5432;Database=hotelariadb;Username=lucam;Password=Xy4MMes6TZj";
+var connectionString = "Host=postgres;Port=5432;Database=hotelariadb;Username=lucam;Password=Xy4MMes6TZj";
 builder.Services.AddDbContext<Turify.Data.Context>(options =>
  options.UseNpgsql(connectionString)
 );
