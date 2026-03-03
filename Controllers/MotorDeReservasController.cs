@@ -44,7 +44,7 @@ namespace Turify.Controllers
       return retorno.Sucesso ? Ok(retorno) : BadRequest(retorno);
     }
 
-    [Authorize]
+    [AllowAnonymous]
     [HttpGet("{quartoId}/Disponibilidade")]
     public async Task<IActionResult> GetDisponibilidade(string quartoId)
     {

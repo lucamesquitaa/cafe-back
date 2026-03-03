@@ -384,8 +384,15 @@ namespace Turify.Facades
           _context.QuartoAvailable.Remove(area);
 
           // Agora tratamos por dias e incluímos a data de checkout como dia reservado.
-          var nightStart = reserva.Checkin.Date;
-          var nightEnd = reserva.Checkout.Date; // <-- include checkout date
+          // Se EarlyCheckin == true, bloqueia o dia anterior ao checkin também
+          var nightStart = reserva.EarlyCheckin == true
+              ? reserva.Checkin.Date.AddDays(-1)
+              : reserva.Checkin.Date; // Sem early checkin, começa no dia do checkin
+
+          // Se LateCheckout == true, bloqueia o dia completo do checkout também
+          var nightEnd = reserva.LateCheckout == true
+              ? reserva.Checkout.Date
+              : reserva.Checkout.Date.AddDays(-1); // Sem late checkout, não bloq late checkout, não bloqueia o último dia
 
           // Interseção em dias entre a área e a reserva
           var overlapNightStart = area.StartDate.Date > nightStart ? area.StartDate.Date : nightStart;

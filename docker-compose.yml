@@ -1,0 +1,62 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres  # especifica a versao para mais previsibilidade
+    container_name: postgres_local
+    restart: always
+    environment:
+      POSTGRES_USER: lucam
+      POSTGRES_PASSWORD: Xy4MMes6TZj
+      POSTGRES_DB: hotelariadb
+    ports:  
+      - "5432:5432"
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin_local
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: 'lucamesquitaa@gmail.com'
+      PGADMIN_DEFAULT_PASSWORD: 'admin'
+    ports:
+      - "9090:80"
+    depends_on:
+      - postgres
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis_local
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  turify:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BUILD_CONFIGURATION: Debug
+    image: turify:latest
+    container_name: turify_local
+    restart: always
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      PORT: 8080
+      DB_HOST: postgres  # use o nome do servico do Postgres, nao o container_name
+      DB_USER: lucam
+      DB_PASSWORD: Xy4MMes6TZj
+      DB_NAME: hotelariadb  # adicione para ficar explicito
+      REDIS_HOST: redis:6379
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - redis
+
+volumes:
+  redis-data:
