@@ -1,16 +1,35 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
 namespace Turify.Migrations
 {
     /// <inheritdoc />
-    public partial class novocomquartos : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "ErrorLogs",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Message = table.Column<string>(type: "text", nullable: false),
+                    StackTrace = table.Column<string>(type: "text", nullable: true),
+                    Path = table.Column<string>(type: "text", nullable: false),
+                    Method = table.Column<string>(type: "text", nullable: false),
+                    UserId = table.Column<string>(type: "text", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ErrorLogs", x => x.Id);
+                });
+
             migrationBuilder.CreateTable(
                 name: "Hotel",
                 columns: table => new
@@ -71,6 +90,26 @@ namespace Turify.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "CategoryQuarto",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    DetalhesModelId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    Number = table.Column<int>(type: "integer", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CategoryQuarto", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CategoryQuarto_Hotel_DetalhesModelId",
+                        column: x => x.DetalhesModelId,
+                        principalTable: "Hotel",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Contacts",
                 columns: table => new
                 {
@@ -103,8 +142,8 @@ namespace Turify.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     DetalhesModelId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Numero = table.Column<int>(type: "integer", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
-                    Tags = table.Column<string[]>(type: "text[]", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false),
                     MaxOcupation = table.Column<int>(type: "integer", nullable: false),
                     Refund = table.Column<bool>(type: "boolean", nullable: true),
@@ -179,8 +218,9 @@ namespace Turify.Migrations
                 name: "BedsDTO",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Type = table.Column<string>(type: "text", nullable: false),
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    BedType = table.Column<int>(type: "integer", nullable: false),
                     Quantity = table.Column<int>(type: "integer", nullable: false),
                     QuartosModelId = table.Column<Guid>(type: "uuid", nullable: true)
                 },
@@ -195,45 +235,17 @@ namespace Turify.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "CategoryQuarto",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    DetalhesModelId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "text", nullable: false),
-                    Number = table.Column<int>(type: "integer", nullable: true),
-                    QuartosModelId = table.Column<Guid>(type: "uuid", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CategoryQuarto", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_CategoryQuarto_Hotel_DetalhesModelId",
-                        column: x => x.DetalhesModelId,
-                        principalTable: "Hotel",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_CategoryQuarto_Quartos_QuartosModelId",
-                        column: x => x.QuartosModelId,
-                        principalTable: "Quartos",
-                        principalColumn: "Id");
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Photos",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    DetalhesModelId = table.Column<Guid>(type: "uuid", nullable: false),
+                    DetalhesModelId = table.Column<Guid>(type: "uuid", nullable: true),
                     DetalhesId = table.Column<Guid>(type: "uuid", nullable: true),
-                    QuartosModelId = table.Column<Guid>(type: "uuid", nullable: false),
+                    QuartosModelId = table.Column<Guid>(type: "uuid", nullable: true),
                     QuartosId = table.Column<Guid>(type: "uuid", nullable: true),
                     Alt = table.Column<string>(type: "text", nullable: false),
                     Url = table.Column<string>(type: "text", nullable: false),
-                    Stared = table.Column<bool>(type: "boolean", nullable: true),
-                    DetalhesModelId1 = table.Column<Guid>(type: "uuid", nullable: false),
-                    QuartosModelId1 = table.Column<Guid>(type: "uuid", nullable: false)
+                    Stared = table.Column<bool>(type: "boolean", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -262,6 +274,131 @@ namespace Turify.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "QuartoAvailable",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    QuartosModelId = table.Column<Guid>(type: "uuid", nullable: true),
+                    QuartosId = table.Column<Guid>(type: "uuid", nullable: true),
+                    isAvailable = table.Column<bool>(type: "boolean", nullable: false),
+                    ReservationId = table.Column<int>(type: "integer", nullable: true),
+                    Number = table.Column<int>(type: "integer", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    StartDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    DayPrice = table.Column<double>(type: "double precision", nullable: false),
+                    MinDays = table.Column<int>(type: "integer", nullable: false),
+                    MaxDays = table.Column<int>(type: "integer", nullable: false),
+                    Reembolsavel = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_QuartoAvailable", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_QuartoAvailable_Quartos_QuartosId",
+                        column: x => x.QuartosId,
+                        principalTable: "Quartos",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_QuartoAvailable_Quartos_QuartosModelId",
+                        column: x => x.QuartosModelId,
+                        principalTable: "Quartos",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "QuartoCategory",
+                columns: table => new
+                {
+                    CategoryQuartoId = table.Column<Guid>(type: "uuid", nullable: false),
+                    QuartosModelId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_QuartoCategory", x => new { x.CategoryQuartoId, x.QuartosModelId });
+                    table.ForeignKey(
+                        name: "FK_QuartoCategory_CategoryQuarto_CategoryQuartoId",
+                        column: x => x.CategoryQuartoId,
+                        principalTable: "CategoryQuarto",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_QuartoCategory_Quartos_QuartosModelId",
+                        column: x => x.QuartosModelId,
+                        principalTable: "Quartos",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "QuartoReservas",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    QuartosModelId = table.Column<Guid>(type: "uuid", nullable: true),
+                    QuartosId = table.Column<Guid>(type: "uuid", nullable: true),
+                    ReservaStatus = table.Column<int>(type: "integer", nullable: false),
+                    Checkin = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Checkout = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    EarlyCheckin = table.Column<bool>(type: "boolean", nullable: true),
+                    LateCheckout = table.Column<bool>(type: "boolean", nullable: true),
+                    Adults = table.Column<int>(type: "integer", nullable: false),
+                    Kids = table.Column<int>(type: "integer", nullable: false),
+                    Cupom = table.Column<string>(type: "text", nullable: true),
+                    PriceTotal = table.Column<double>(type: "double precision", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_QuartoReservas", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_QuartoReservas_Quartos_QuartosId",
+                        column: x => x.QuartosId,
+                        principalTable: "Quartos",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_QuartoReservas_Quartos_QuartosModelId",
+                        column: x => x.QuartosModelId,
+                        principalTable: "Quartos",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Hospedes",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ReservationId = table.Column<Guid>(type: "uuid", nullable: true),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    FamilyName = table.Column<string>(type: "text", nullable: false),
+                    Email = table.Column<string>(type: "text", nullable: false),
+                    CPF = table.Column<string>(type: "text", nullable: false),
+                    Phone = table.Column<string>(type: "text", nullable: false),
+                    DateBirth = table.Column<string>(type: "text", nullable: false),
+                    CEP = table.Column<string>(type: "text", nullable: false),
+                    State = table.Column<string>(type: "text", nullable: false),
+                    City = table.Column<string>(type: "text", nullable: false),
+                    Address = table.Column<string>(type: "text", nullable: false),
+                    Complement = table.Column<string>(type: "text", nullable: true),
+                    BloodType = table.Column<string>(type: "text", nullable: true),
+                    Principal = table.Column<bool>(type: "boolean", nullable: true),
+                    TextArea = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Hospedes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Hospedes_QuartoReservas_ReservationId",
+                        column: x => x.ReservationId,
+                        principalTable: "QuartoReservas",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_BedsDTO_QuartosModelId",
                 table: "BedsDTO",
@@ -273,11 +410,6 @@ namespace Turify.Migrations
                 column: "DetalhesModelId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CategoryQuarto_QuartosModelId",
-                table: "CategoryQuarto",
-                column: "QuartosModelId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Contacts_DetalhesId",
                 table: "Contacts",
                 column: "DetalhesId");
@@ -286,6 +418,11 @@ namespace Turify.Migrations
                 name: "IX_Contacts_DetalhesModelId",
                 table: "Contacts",
                 column: "DetalhesModelId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Hospedes_ReservationId",
+                table: "Hospedes",
+                column: "ReservationId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Photos_DetalhesId",
@@ -305,6 +442,31 @@ namespace Turify.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Photos_QuartosModelId",
                 table: "Photos",
+                column: "QuartosModelId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_QuartoAvailable_QuartosId",
+                table: "QuartoAvailable",
+                column: "QuartosId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_QuartoAvailable_QuartosModelId",
+                table: "QuartoAvailable",
+                column: "QuartosModelId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_QuartoCategory_QuartosModelId",
+                table: "QuartoCategory",
+                column: "QuartosModelId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_QuartoReservas_QuartosId",
+                table: "QuartoReservas",
+                column: "QuartosId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_QuartoReservas_QuartosModelId",
+                table: "QuartoReservas",
                 column: "QuartosModelId");
 
             migrationBuilder.CreateIndex(
@@ -340,22 +502,37 @@ namespace Turify.Migrations
                 name: "BedsDTO");
 
             migrationBuilder.DropTable(
-                name: "CategoryQuarto");
+                name: "Contacts");
 
             migrationBuilder.DropTable(
-                name: "Contacts");
+                name: "ErrorLogs");
+
+            migrationBuilder.DropTable(
+                name: "Hospedes");
 
             migrationBuilder.DropTable(
                 name: "Photos");
 
             migrationBuilder.DropTable(
+                name: "QuartoAvailable");
+
+            migrationBuilder.DropTable(
+                name: "QuartoCategory");
+
+            migrationBuilder.DropTable(
                 name: "UsuarioPermissao");
 
             migrationBuilder.DropTable(
-                name: "Quartos");
+                name: "QuartoReservas");
+
+            migrationBuilder.DropTable(
+                name: "CategoryQuarto");
 
             migrationBuilder.DropTable(
                 name: "Usuarios");
+
+            migrationBuilder.DropTable(
+                name: "Quartos");
 
             migrationBuilder.DropTable(
                 name: "Hotel");
