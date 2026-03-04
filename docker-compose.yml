@@ -22,7 +22,7 @@ services:
       PGADMIN_DEFAULT_EMAIL: 'lucamesquitaa@gmail.com'
       PGADMIN_DEFAULT_PASSWORD: 'admin'
     ports:
-      - "9090:80"
+      - "8081:81"
     depends_on:
       - postgres
 
