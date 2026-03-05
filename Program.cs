@@ -184,6 +184,7 @@ app.UseSwagger();
  {
  c.SwaggerEndpoint("/swagger/v1/swagger.json", "Hotelaria API v2");
  });
+app.UseForwardedHeaders();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
