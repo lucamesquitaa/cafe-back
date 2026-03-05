@@ -46,7 +46,7 @@ builder.Services.AddCors(options =>
 {
  options.AddPolicy("AllowAngular",
  policy => policy
- .WithOrigins("http://localhost:4200", "https://turify.com.br")
+ .WithOrigins("http://localhost:4200", "https://turify.com.br", "https://api.turify.com.br")
  .AllowAnyHeader()
  .AllowAnyMethod());
 });
@@ -163,7 +163,7 @@ builder.Services.AddSwaggerGen(c =>
 
 
 var app = builder.Build();
-
+app.UseForwardedHeaders();
 using (var scope = app.Services.CreateScope())
 {
  var context = scope.ServiceProvider.GetRequiredService<Turify.Data.Context>();
@@ -184,7 +184,7 @@ app.UseSwagger();
  {
  c.SwaggerEndpoint("/swagger/v1/swagger.json", "Hotelaria API v2");
  });
-app.UseForwardedHeaders();
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
