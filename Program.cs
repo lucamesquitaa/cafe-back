@@ -16,25 +16,6 @@ using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//HOMOLOG
-// 🔐 Acessa o segredo na inicialização da aplicação
-//var secretClient = SecretManagerServiceClient.Create();
-
-//var connStringSecret = new SecretVersionName(projectId, connString, "latest");
-//var resultConn = await secretClient.AccessSecretVersionAsync(connStringSecret);
-
-//var passSecretaSecret = new SecretVersionName(projectId, passSecreta, "latest");
-//var resultPass = await secretClient.AccessSecretVersionAsync(passSecretaSecret);
-//HOMOLOG
-//var connectionString = result.Payload.Data.ToStringUtf8();
-
-// var connectionString = "Host=34.46.28.173;Port=5432;Database=hotelariadb;Username=postgres;Password=X(y4M&.}@Mes6TZJ";
-
-// Prefer an explicit connection string from configuration (appsettings.*.json) or environment variable
-var dbHost = "localhost";
-var dbUser = "lucam";
-var dbPass = "Xy4MMes6TZj";
-
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 
 builder.WebHost.ConfigureKestrel(serverOptions =>
@@ -70,7 +51,10 @@ builder.Services.AddSingleton<IRabbitMqProducer>(sp =>
 ));
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<GoogleAuthService>();
-var connectionString = "Host=postgres;Port=5432;Database=hotelariadb;Username=lucam;Password=Xy4MMes6TZj";
+var connectionString = builder.Configuration.GetConnectionString("Default")
+    ?? Environment.GetEnvironmentVariable("CONNECTION_STRING")
+    ?? throw new InvalidOperationException(
+        "Connection string não configurada. Defina ConnectionStrings__Default ou a variável de ambiente CONNECTION_STRING.");
 builder.Services.AddDbContext<Turify.Data.Context>(options =>
  options.UseNpgsql(connectionString)
 );
@@ -128,7 +112,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
  });
 
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 

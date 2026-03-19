@@ -22,7 +22,7 @@ namespace Turify.Services
       {
         var settings = new GoogleJsonWebSignature.ValidationSettings()
         {
-          Audience = new[] { "54700728866-d81aiuid54e66ju93oia449v9dkcs357.apps.googleusercontent.com" } // garante que o token é para seu app
+          Audience = new[] { _googleClientId }
         };
 
         var payload = await GoogleJsonWebSignature.ValidateAsync(idToken, settings);
