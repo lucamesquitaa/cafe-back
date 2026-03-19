@@ -15,22 +15,17 @@ using Turify.Facades.Interfaces;
 using Turify.Models;
 using Turify.Models.DTOs;
 using Turify.Models.Enums;
-using Turify.Services;
 
 namespace Turify.Facades
 {
   public class MotorDeReservasFacade : IMotorDeReservasFacade
   {
     private readonly Context _context;
-    private readonly GoogleAuthService _googleAuthService;
-    private UtilsFacade _utilsFacade;
     private readonly IDistributedCache _redis;
 
-    public MotorDeReservasFacade(Context context, GoogleAuthService googleAuthService, UtilsFacade utilsFacade, IDistributedCache redis)
+    public MotorDeReservasFacade(Context context, IDistributedCache redis)
     {
       _context = context;
-      _googleAuthService = googleAuthService;
-      _utilsFacade = utilsFacade;
       _redis = redis;
     }
 
@@ -45,26 +40,12 @@ namespace Turify.Facades
     {
       try
       {
-        var userEmail = _googleAuthService.GetUserEmailFromToken();
-
-        if (string.IsNullOrEmpty(userEmail))
-          return Retorno<QuartoAvailable>.Erro("Usuário não encontrado - email.");
-
-        var user = await _utilsFacade.GetUserByEmail(userEmail);
-
-        if (user == null || user.Id == Guid.Empty)
-          return Retorno<QuartoAvailable>.Erro("Usuário não encontrado - id.");
-
         Guid quartoGuid = new Guid(quartoId);
 
         var quarto = await _context.Quartos.FirstOrDefaultAsync(q => q.Id == quartoGuid);
 
         if (quarto == null || quarto.Id == Guid.Empty)
           return Retorno<QuartoAvailable>.Erro("Quarto não encontrado.");
-
-        bool userHasPerm = await _utilsFacade.IsAdminOrManager(user.Id, quarto.DetalhesModelId);
-        if (!userHasPerm)
-          return Retorno<QuartoAvailable>.Erro("Permissão do usuário não é admin/gerente deste hotel.");
 
         bool datasOK = await VerificaDatasOK(disponibilidade, quartoGuid);
 
@@ -103,26 +84,7 @@ namespace Turify.Facades
     {
       try
       {
-        var userEmail = _googleAuthService.GetUserEmailFromToken();
-
-        if (string.IsNullOrEmpty(userEmail))
-          return Retorno<QuartoAvailable>.Erro("Usuário não encontrado - email.");
-
-        var user = await _utilsFacade.GetUserByEmail(userEmail);
-
-        if (user == null || user.Id == Guid.Empty)
-          return Retorno<QuartoAvailable>.Erro("Usuário não encontrado - id.");
-
         Guid quartoGuid = new Guid(quartoId);
-
-        var quarto = await _context.Quartos.FirstOrDefaultAsync(q => q.Id == quartoGuid);
-
-        if (quarto == null || quarto.Id == Guid.Empty)
-          return Retorno<QuartoAvailable>.Erro("Quarto não encontrado.");
-
-        bool userHasPerm = await _utilsFacade.IsAdminOrManager(user.Id, quarto.DetalhesModelId);
-        if (!userHasPerm)
-          return Retorno<QuartoAvailable>.Erro("Permissão do usuário não é admin/gerente deste hotel.");
 
         // Parsing robusto: aceita "yyyy-MM-dd" e "dd/MM/yyyy" (com fallback para pt-BR).
         if (string.IsNullOrWhiteSpace(disponibilidadeDay?.Day))
@@ -273,26 +235,12 @@ namespace Turify.Facades
     {
       try
       {
-        var userEmail = _googleAuthService.GetUserEmailFromToken();
-
-        if (string.IsNullOrEmpty(userEmail))
-          return Retorno<QuartoReservas>.Erro("Usuário não encontrado - email.");
-
-        var user = await _utilsFacade.GetUserByEmail(userEmail);
-
-        if (user == null || user.Id == Guid.Empty)
-          return Retorno<QuartoReservas>.Erro("Usuário não encontrado - id.");
-
         Guid quartoGuid = new Guid(quartoId);
 
         var quarto = await _context.Quartos.FirstOrDefaultAsync(q => q.Id == quartoGuid);
 
         if (quarto == null || quarto.Id == Guid.Empty)
           return Retorno<QuartoReservas>.Erro("Quarto não encontrado.");
-
-        bool userHasPerm = await _utilsFacade.IsAdminOrManager(user.Id, quarto.DetalhesModelId);
-        if (!userHasPerm)
-          return Retorno<QuartoReservas>.Erro("Permissão do usuário não é admin/gerente deste hotel.");
 
         QuartoReservas obj = new QuartoReservas
         {
@@ -484,27 +432,6 @@ namespace Turify.Facades
     {
       try
       {
-        var userEmail = _googleAuthService.GetUserEmailFromToken();
-
-        if (string.IsNullOrEmpty(userEmail))
-          return Retorno<IEnumerable<QuartoReservas>>.Erro("Usuário não encontrado - email.");
-
-        var user = await _utilsFacade.GetUserByEmail(userEmail);
-
-        if (user == null || user.Id == Guid.Empty)
-          return Retorno<IEnumerable<QuartoReservas>>.Erro("Usuário não encontrado - id.");
-
-        Guid quartoGuid = new Guid(quartoId);
-
-        var quarto = await _context.Quartos.FirstOrDefaultAsync(q => q.Id == quartoGuid);
-
-        if (quarto == null || quarto.Id == Guid.Empty)
-          return Retorno<IEnumerable<QuartoReservas>>.Erro("Quarto não encontrado.");
-
-        bool userHasPerm = await _utilsFacade.IsAdminOrManager(user.Id, quarto.DetalhesModelId);
-        if (!userHasPerm)
-          return Retorno<IEnumerable<QuartoReservas>>.Erro("Permissão do usuário não é admin/gerente deste hotel.");
-
         Guid reservaGuid = new Guid(updatedReserva.ReservaId);
         var reserva = await _context.QuartoReservas.FirstOrDefaultAsync(r => r.Id == reservaGuid);
 
@@ -561,26 +488,7 @@ namespace Turify.Facades
     {
       try
       {
-        var userEmail = _googleAuthService.GetUserEmailFromToken();
-
-        if (string.IsNullOrEmpty(userEmail))
-          return Retorno<IEnumerable<RetornoReservasDTO>>.Erro("Usuário não encontrado - email.");
-
-        var user = await _utilsFacade.GetUserByEmail(userEmail);
-
-        if (user == null || user.Id == Guid.Empty)
-          return Retorno<IEnumerable<RetornoReservasDTO>>.Erro("Usuário não encontrado - id.");
-
         Guid quartoGuid = new Guid(quartoId);
-
-        var quarto = await _context.Quartos.FirstOrDefaultAsync(q => q.Id == quartoGuid);
-
-        if (quarto == null || quarto.Id == Guid.Empty)
-          return Retorno<IEnumerable<RetornoReservasDTO>>.Erro("Quarto não encontrado.");
-
-        bool userHasPerm = await _utilsFacade.IsAdminOrManager(user.Id, quarto.DetalhesModelId);
-        if (!userHasPerm)
-          return Retorno<IEnumerable<RetornoReservasDTO>>.Erro("Permissão do usuário não é admin/gerente deste hotel.");
 
         var reservas = await _context.QuartoReservas
         .Where(qa => qa.QuartosModelId == quartoGuid)
@@ -621,6 +529,29 @@ namespace Turify.Facades
         .ToListAsync();
 
         return Retorno<IEnumerable<RetornoReservasDTO>>.Ok(reservas, "reservas buscadas com sucesso.");
+      }
+      catch (Exception e)
+      {
+        throw new ArgumentException(e.Message);
+      }
+    }
+
+    public async Task<IRetorno> DeleteReservaAsync(string reservaId, string quartoId)
+    {
+      try
+      {
+        Guid reservaGuid = new Guid(reservaId);
+        var reserva = await _context.QuartoReservas.FirstOrDefaultAsync(r => r.Id == reservaGuid);
+
+        if (reserva == null || reserva.Id == Guid.Empty)
+          return Retorno<QuartoReservas>.Erro("Reserva não encontrada.");
+
+        reserva.ReservaStatus = (int)StatusHospedeReservaEnum.CanceladaHotel;
+        reserva.CancelledAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return Retorno.Ok(null, "Reserva cancelada com sucesso.");
       }
       catch (Exception e)
       {

@@ -8,6 +8,7 @@ using NuGet.Protocol;
 using Turify.Data;
 using Turify.Facades;
 using Turify.Facades.Interfaces;
+using Turify.Filters;
 using Turify.Models;
 
 namespace Turify.Controllers
@@ -55,6 +56,7 @@ namespace Turify.Controllers
 
     // GET: api/<ValuesController>
     [Authorize]
+    [ValidateHotelAccess]
     [HttpGet("ByManager/{hotelId}")]
     public async Task<IActionResult> GetByManager(string hotelId)
     {
@@ -94,6 +96,7 @@ namespace Turify.Controllers
 
     // PUT api/<ValuesController>
     [Authorize]
+    [ValidateHotelAccess]
     [HttpPut("{hotelId}")]
     public async Task<IActionResult> Put([FromBody] DetalhesModel obj, string hotelId)
     {
@@ -106,6 +109,7 @@ namespace Turify.Controllers
     }
 
     [Authorize]
+    [ValidateHotelAccess]
     [HttpPost("{hotelId}/fotos")]
     public async Task<IActionResult> PostFotos(IFormFile file, string hotelId)
     {
@@ -146,6 +150,7 @@ namespace Turify.Controllers
 
     // DELETE api/<ValuesController>/5
     [Authorize]
+    [ValidateHotelAccess(adminOnly: true)]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(string id)
     {

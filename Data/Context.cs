@@ -41,6 +41,14 @@ namespace Turify.Data
         j => j.HasOne<QuartosModel>().WithMany().HasForeignKey("QuartosModelId").OnDelete(DeleteBehavior.Cascade)
       );
 
+      // Soft delete: excluir automaticamente hotéis deletados de todas as queries
+      modelBuilder.Entity<DetalhesModel>()
+          .HasQueryFilter(h => h.DeletedAt == null);
+
+      // Soft delete: excluir automaticamente quartos deletados de todas as queries
+      modelBuilder.Entity<QuartosModel>()
+          .HasQueryFilter(q => q.DeletedAt == null);
+
       // Relacionamento 1:N entre DetalhesModel e FotosDetalhesModel
       modelBuilder.Entity<DetalhesModel>()
           .HasMany(h => h.Photos)

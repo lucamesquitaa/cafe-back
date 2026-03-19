@@ -10,22 +10,17 @@ using Turify.Facades.Interfaces;
 using Turify.Models;
 using Turify.Models.DTOs;
 using Turify.Models.Enums;
-using Turify.Services;
 
 namespace Turify.Facades
 {
   public class QuartosFacade : IQuartosFacade, IRetorno
   {
     private readonly Context _context;
-    private readonly GoogleAuthService _googleAuthService;
-    private UtilsFacade _utilsFacade;
     private PhotosFacade _photosFacade;
 
-    public QuartosFacade(Context context, GoogleAuthService googleAuthService, UtilsFacade utilsFacade, PhotosFacade photosFacade)
+    public QuartosFacade(Context context, PhotosFacade photosFacade)
     {
       _context = context;
-      _googleAuthService = googleAuthService;
-      _utilsFacade = utilsFacade;
       _photosFacade = photosFacade;
     }
 
@@ -82,21 +77,7 @@ namespace Turify.Facades
     {
       try
       {
-        var userEmail = _googleAuthService.GetUserEmailFromToken();
-
-        if (string.IsNullOrEmpty(userEmail))
-          return Retorno<QuartosModel>.Erro("Usuário não encontrado - email.");
-
-        var user = await _utilsFacade.GetUserByEmail(userEmail);
-
-        if (user == null || user.Id == Guid.Empty)
-          return Retorno<QuartosModel>.Erro("Usuário não encontrado - id.");
-
         var hotelGuid = Guid.Parse(hotelId);
-
-        bool userHasPerm = await _utilsFacade.IsAdminOrManager(user.Id, hotelGuid);
-        if (!userHasPerm)
-          return Retorno<QuartosModel>.Erro("Permissão do usuário não é admin/gerente deste hotel.");
 
         var quartoExistente = await _context.Quartos
                                             .Include(q => q.Category)
@@ -164,26 +145,10 @@ namespace Turify.Facades
         throw new Exception("Erro ao processar a solicitação. id: " + hotelId + "obj: " + JsonSerializer.Serialize(quartos));
       }
     }
-    public async Task<IRetorno> DeleteQuartosFacade(string quartoId, string hotelId)
+    public async Task<IRetorno> DeleteQuartosFacade(string hotelId, string quartoId)
     {
       try
       {
-        var userEmail = _googleAuthService.GetUserEmailFromToken();
-
-        if (string.IsNullOrEmpty(userEmail))
-          return Retorno.Erro("Usuário não encontrado - email.");
-
-        var user = await _utilsFacade.GetUserByEmail(userEmail);
-
-        if (user == null || user.Id == Guid.Empty)
-          return Retorno.Erro("Usuário não encontrado - id.");
-
-        var hotelGuid = Guid.Parse(hotelId);
-
-        bool userHasPerm = await _utilsFacade.IsAdminOnly(user.Id, hotelGuid);
-        if (!userHasPerm)
-          return Retorno.Erro("Permissão do usuário não é admin deste hotel.");
-
         var quartoGuid = Guid.Parse(quartoId);
 
         var quartoExistente = await _context.Quartos
@@ -192,26 +157,32 @@ namespace Turify.Facades
         if (quartoExistente == null)
           return Retorno.Erro("Quarto não encontrado.");
 
-        //deletar beds
-        // Carrega e deleta explicitamente os beds relacionados para evitar violação de FK
-        await _context.Entry(quartoExistente).Collection(q => q.Beds).LoadAsync();
-        if (quartoExistente.Beds != null && quartoExistente.Beds.Any())
+        var now = DateTime.UtcNow;
+
+        // Cancelar reservas futuras (soft delete)
+        var reservasFuturas = await _context.QuartoReservas
+            .Where(r => r.QuartosModelId == quartoGuid && r.Checkout > now && r.CancelledAt == null)
+            .ToListAsync();
+
+        foreach (var reserva in reservasFuturas)
         {
-          _context.Set<BedsDTO>().RemoveRange(quartoExistente.Beds);
-          await _context.SaveChangesAsync();
+          reserva.ReservaStatus = (int)StatusHospedeReservaEnum.CanceladaHotel;
+          reserva.CancelledAt = now;
         }
 
-        var imageIds = await _context.Photos
-                                      .Where(p => p.QuartosModelId == quartoGuid)
-                                      .Select(p => p.Id.ToString())
-                                      .ToListAsync();
+        // Remover tarifas futuras (hard delete — sem valor histórico)
+        var tarifasFuturas = await _context.QuartoAvailable
+            .Where(a => a.QuartosModelId == quartoGuid && a.EndDate > now)
+            .ToListAsync();
 
-        await _photosFacade.DeleteImagesAsync(imageIds);
+        _context.QuartoAvailable.RemoveRange(tarifasFuturas);
 
-        _context.Quartos.Remove(quartoExistente);
+        // Soft delete do quarto
+        quartoExistente.DeletedAt = now;
+
         await _context.SaveChangesAsync();
 
-        return Retorno.Ok("Dados deletados com sucesso.");
+        return Retorno.Ok("Quarto deletado com sucesso.");
       } catch (Exception e) {
         throw new Exception("Erro ao processar a solicitação. id: " + hotelId + " quarto id : " + quartoId);
       }

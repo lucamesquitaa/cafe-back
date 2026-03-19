@@ -104,19 +104,7 @@ namespace Turify.Facades
     {
       try
       {
-        var userEmail = _googleAuthService.GetUserEmailFromToken();
-
-        if (string.IsNullOrEmpty(userEmail))
-          return Retorno<DetalhesModel>.Erro("Usuario não tem permissão para executar esta ação.");
-
-        var user = await _utilsFacade.GetUserByEmail(userEmail);
-
         var hotelIdGuid = Guid.Parse(hotelId);
-
-        bool userHasPerm = await _utilsFacade.IsAdminOrManager(user.Id, hotelIdGuid);
-
-        if (!userHasPerm)
-          return Retorno<DetalhesModel>.Erro("O usuário não tem permissão para executar esta ação.");
 
         var hotel = await _context.Hotel.Where(u => u.Id == hotelIdGuid)
                                         .AsNoTracking()
@@ -253,23 +241,6 @@ namespace Turify.Facades
     {
       try
       {
-        var userEmail = _googleAuthService.GetUserEmailFromToken();
-
-        if (string.IsNullOrEmpty(userEmail))
-          return Retorno<DetalhesModel>.Erro("Usuário não encontrado - email.");
-
-        var user = await _utilsFacade.GetUserByEmail(userEmail);
-
-        if (user == null || user.Id == Guid.Empty)
-          return Retorno<DetalhesModel>.Erro("Usuário não encontrado - id.");
-
-        var hotelIdGuid = Guid.Parse(id);
-
-        bool userHasPerm = await _utilsFacade.IsAdminOrManager(user.Id, hotelIdGuid);
-
-        if (!userHasPerm)
-          return Retorno<DetalhesModel>.Erro("Permissão do usuário não é admin/gerente deste hotel.");
-
         var hotelId = Guid.Parse(id);
 
         var hotelExistente = await _context.Hotel
@@ -326,43 +297,17 @@ namespace Turify.Facades
     {
       try
       {
-        var userEmail = _googleAuthService.GetUserEmailFromToken();
-
-        if (string.IsNullOrEmpty(userEmail))
-          return Retorno.Erro("Usuário não encontrado - email.");
-
-        var user = await _utilsFacade.GetUserByEmail(userEmail);
-
-        if (user == null || user.Id == Guid.Empty)
-          return Retorno.Erro("Usuário não encontrado - id.");
-
         var idGuid = Guid.Parse(id);
-
-        bool userHasPerm = await _utilsFacade.IsAdminOnly(user.Id, idGuid);
-
-        if (!userHasPerm)
-          return Retorno.Erro("Permissão do usuário não é admin/gerente deste hotel.");
 
         var hotel = await _context.Hotel.Where(u => u.Id == idGuid).FirstOrDefaultAsync();
 
         if (hotel == null)
-          return Retorno.Erro("Hotel não encontrada.");
+          return Retorno.Erro("Hotel não encontrado.");
 
-        // Exclui entidades filhas
-        var permissoes = await _context.UsuarioPermissao.Where(x => x.DetalhesModelId == hotel.Id).ToListAsync();
-        _context.UsuarioPermissao.RemoveRange(permissoes);
-
-        var imageIds = await _context.Photos
-                                      .Where(p => p.DetalhesModelId == idGuid)
-                                      .Select(p => p.Id.ToString())
-                                      .ToListAsync();
-
-        await _photosFacade.DeleteImagesAsync(imageIds);
-
-        _context.Hotel.Remove(hotel);
+        hotel.DeletedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
-        return Retorno.Ok("Dados deletados com sucesso.");
+        return Retorno.Ok("Hotel deletado com sucesso.");
       }
       catch (Exception e)
       {

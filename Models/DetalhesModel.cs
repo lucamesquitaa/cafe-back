@@ -48,6 +48,8 @@ namespace Turify.Models
     public ICollection<FotosDetalhesModel> Photos { get; set; } = new List<FotosDetalhesModel>();
     public ICollection<UsuarioPermissoes> Permissions { get; set; } = new List<UsuarioPermissoes>();
 
+    public DateTime? DeletedAt { get; set; }
+
     // esconder infos pessoais
     public string Cnpj { get; set; } = string.Empty;
     public string Razao { get; set; } = string.Empty;

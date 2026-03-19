@@ -12,5 +12,6 @@ namespace Turify.Facades.Interfaces
     Task<IRetorno> PutReservaAsync([FromBody] UpdateReservaDTO updatedReserva, string quartoId);
     Task<IRetorno<IEnumerable<RetornoReservasDTO>>> GetReservaAsync(string quartoId);
     Task<IRetorno<QuartoAvailable>> PutDisponibilidadeDayAsync([FromBody] UpdateDayDisponibilidadeDTO disponibilidadeDay, string quartoId);
+    Task<IRetorno> DeleteReservaAsync(string reservaId, string quartoId);
   }
 }
