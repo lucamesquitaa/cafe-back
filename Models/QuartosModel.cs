@@ -34,6 +34,7 @@ namespace Turify.Models
     public string? BathProducts { get; set; }
     public bool? Tv { get; set; }
     public string? TypeTv { get; set; }
+    public DateTime? DeletedAt { get; set; }
     public ICollection<FotosDetalhesModel> Photos { get; set; } = new List<FotosDetalhesModel>();
     public ICollection<QuartoReservas> Reservas { get; set; } = new List<QuartoReservas>();
     public ICollection<QuartoAvailable> Disponibilidade { get; set; } = new List<QuartoAvailable>();

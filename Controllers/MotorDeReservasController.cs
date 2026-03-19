@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Turify.Data;
 using Turify.Facades;
+using Turify.Filters;
 using Turify.Models;
 using Turify.Models.DTOs;
 
@@ -21,6 +22,7 @@ namespace Turify.Controllers
     }
 
     [Authorize]
+    [ValidateQuartoAccess]
     [HttpPost("{quartoId}/Disponibilidade")]
     public async Task<IActionResult> PostDisponibilidade([FromBody] AddDisponibilidadeDTO disponibilidade, string quartoId)
     {
@@ -33,6 +35,7 @@ namespace Turify.Controllers
     }
 
     [Authorize]
+    [ValidateQuartoAccess]
     [HttpPut("{quartoId}/DisponibilidadeDay")]
     public async Task<IActionResult> PutDisponibilidadeDay([FromBody] UpdateDayDisponibilidadeDTO disponibilidadeDay, string quartoId)
     {
@@ -55,6 +58,7 @@ namespace Turify.Controllers
     }
 
     [Authorize]
+    [ValidateQuartoAccess]
     [HttpPost("{quartoId}/Reserva")]
     public async Task<IActionResult> PostReserva([FromBody] AddReservaDTO reserva, string quartoId)
     {
@@ -67,6 +71,7 @@ namespace Turify.Controllers
     }
 
     [Authorize]
+    [ValidateQuartoAccess]
     [HttpPut("{quartoId}/UpdateReserva")]
     public async Task<IActionResult> UpdateReserva([FromBody] UpdateReservaDTO updatedReserva, string quartoId)
     {
@@ -79,12 +84,26 @@ namespace Turify.Controllers
     }
 
     [Authorize]
+    [ValidateQuartoAccess]
     [HttpGet("{quartoId}/Reserva")]
     public async Task<IActionResult> GetReserva(string quartoId)
     {
       var retorno = await _facade.GetReservaAsync(quartoId);
       if (retorno == null)
         return BadRequest();
+      return retorno.Sucesso ? Ok(retorno) : BadRequest(retorno);
+    }
+
+    [Authorize]
+    [ValidateQuartoAccess]
+    [HttpDelete("{quartoId}/Reserva/{reservaId}")]
+    public async Task<IActionResult> DeleteReserva(string quartoId, string reservaId)
+    {
+      var retorno = await _facade.DeleteReservaAsync(reservaId, quartoId);
+
+      if (retorno == null)
+        return BadRequest();
+
       return retorno.Sucesso ? Ok(retorno) : BadRequest(retorno);
     }
   }

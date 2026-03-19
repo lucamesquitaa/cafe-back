@@ -18,6 +18,7 @@ namespace Turify.Models
     public string? Cupom { get; set; }
     public double PriceTotal { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? CancelledAt { get; set; }
     public ICollection<Hospedes> Hospede { get; set; } = new List<Hospedes>();
   }
 }

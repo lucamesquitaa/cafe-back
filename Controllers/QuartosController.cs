@@ -6,6 +6,7 @@ using NuGet.Common;
 using Turify.Data;
 using Turify.Facades;
 using Turify.Facades.Interfaces;
+using Turify.Filters;
 using Turify.Models;
 using Turify.Models.DTOs;
 using Turify.Models.Enums;
@@ -50,6 +51,8 @@ namespace Turify.Controllers
         return Ok(result);
     }
 
+    [Authorize]
+    [ValidateHotelAccess]
     [HttpPost("PostPutQuartos/{hotelId}")]
     public async Task<IActionResult> PostQuartos([FromBody] QuartosModel obj, string hotelId)
     {
@@ -61,6 +64,8 @@ namespace Turify.Controllers
         return Ok(result);
     }
 
+    [Authorize]
+    [ValidateHotelAccess(adminOnly: true)]
     [HttpDelete("DeleteQuarto/{hotelId}/{quartoId}")]
     public async Task<IActionResult> DeleteQuartos(string hotelId, string quartoId)
     {
