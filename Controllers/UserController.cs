@@ -45,7 +45,6 @@ namespace Turify.Controllers
       return Unauthorized("Token de login expirado.");
     }
 
-    [AllowAnonymous]
     [HttpPost("GetAllPermissionUsers")]
     public async Task<IActionResult> GetAllPermissionUsers([FromBody] hotelIdObj obj)
     {
@@ -57,7 +56,6 @@ namespace Turify.Controllers
         return Ok(result);
     }
 
-    [AllowAnonymous]
     [HttpPost("UpdateManager")]
     public async Task<IActionResult> UpdateManager([FromBody] ObjSetManager obj)
     {
@@ -69,7 +67,6 @@ namespace Turify.Controllers
         return Ok(result);
     }
 
-    [AllowAnonymous]
     [HttpDelete("RemovePermissionUsers")]
     public async Task<IActionResult> RemovePermissionUsers([FromBody] ObjSetManager obj)
     {
