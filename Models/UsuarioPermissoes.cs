@@ -14,13 +14,11 @@ namespace Turify.Models
     [ForeignKey(nameof(UserModelId))]
     public UserModel? User { get; set; }
 
-    // Email armazenado (opcional, mas consistente com o nome)
-    public string UserModelEmail { get; set; } = string.Empty;
+    // FK para DetalhesModel
+    [Column("DetalhesModelId")]
+    public Guid HotelId { get; set; }
 
-    // FK para DetalhesModel (se aplicável)
-    public Guid DetalhesModelId { get; set; }
-
-    [ForeignKey(nameof(DetalhesModelId))]
+    [ForeignKey(nameof(HotelId))]
     public DetalhesModel? Detalhes { get; set; }
 
     // Papel/role do usuário para o detalhe

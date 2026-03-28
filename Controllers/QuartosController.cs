@@ -65,6 +65,19 @@ namespace Turify.Controllers
     }
 
     [Authorize]
+    [ValidateHotelAccess]
+    [HttpPost("PostQuartosMassa/{hotelId}")]
+    public async Task<IActionResult> PostQuartosMassa(string hotelId, [FromBody] CriarQuartosMassaDTO dto)
+    {
+      var result = await _quartosFacade.PostQuartosMassa(hotelId, dto);
+
+      if (result.Sucesso == false)
+        return BadRequest(result);
+      else
+        return Ok(result);
+    }
+
+    [Authorize]
     [ValidateHotelAccess(adminOnly: true)]
     [HttpDelete("DeleteQuarto/{hotelId}/{quartoId}")]
     public async Task<IActionResult> DeleteQuartos(string hotelId, string quartoId)

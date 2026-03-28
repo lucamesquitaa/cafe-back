@@ -22,7 +22,7 @@ namespace Turify.Facades
 
     public async Task<bool> IsAdminOrManager(Guid userId, Guid hotelId)
     {
-      var user = await _context.UsuarioPermissao.FirstOrDefaultAsync(x => x.UserModelId == userId && x.DetalhesModelId == hotelId);
+      var user = await _context.UsuarioPermissao.FirstOrDefaultAsync(x => x.UserModelId == userId && x.HotelId == hotelId);
 
       bool userIsAdmin = user?.Role == RoleUserModel.Admin || user?.Role == RoleUserModel.Manager || user?.Role == RoleUserModel.Turify;
 
@@ -31,7 +31,7 @@ namespace Turify.Facades
 
     public async Task<bool> IsAdminOnly(Guid userId, Guid hotelId)
     {
-      var user = await _context.UsuarioPermissao.FirstOrDefaultAsync(x => x.UserModelId == userId && x.DetalhesModelId == hotelId);
+      var user = await _context.UsuarioPermissao.FirstOrDefaultAsync(x => x.UserModelId == userId && x.HotelId == hotelId);
 
       bool userIsAdmin = user?.Role == RoleUserModel.Admin || user?.Role == RoleUserModel.Turify;
 

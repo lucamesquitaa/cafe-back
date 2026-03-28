@@ -60,7 +60,7 @@ namespace Turify.Filters
         return;
       }
 
-      bool hasPerm = await _utilsFacade.IsAdminOrManager(user.Id, quarto.DetalhesModelId);
+      bool hasPerm = await _utilsFacade.IsAdminOrManager(user.Id, quarto.HotelId);
       if (!hasPerm)
       {
         context.Result = new ObjectResult(Retorno.Erro("Acesso negado: sem permissão para este hotel.")) { StatusCode = 403 };
