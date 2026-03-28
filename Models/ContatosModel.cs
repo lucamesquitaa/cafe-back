@@ -9,10 +9,11 @@ namespace Turify.Models
     public Guid Id { get; set; } = Guid.NewGuid();
 
     // FK explícita
-    public Guid DetalhesModelId { get; set; }
+    [Column("DetalhesModelId")]
+    public Guid HotelId { get; set; }
 
     // Navegação com ForeignKey apontando para a FK acima
-    [ForeignKey(nameof(DetalhesModelId))]
+    [ForeignKey(nameof(HotelId))]
     public DetalhesModel? Detalhes { get; set; }
 
     [Required]

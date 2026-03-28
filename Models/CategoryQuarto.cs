@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Turify.Models.DTOs;
 
 namespace Turify.Models
 {
@@ -8,11 +9,19 @@ namespace Turify.Models
     [Key]
     public Guid Id { get; set; } = Guid.NewGuid();
 
-    public Guid DetalhesModelId { get; set; }
-    [ForeignKey(nameof(DetalhesModelId))]
+    [Column("DetalhesModelId")]
+    public Guid HotelId { get; set; }
+    [ForeignKey(nameof(HotelId))]
     public DetalhesModel? Detalhes { get; set; }
     [Required]
     public string Name { get; set; } = string.Empty;
     public int? Number { get; set; }
+    public int? MinHospedes { get; set; }
+    public int? MaxHospedes { get; set; }
+    public ICollection<BedsDTO> ConfiguracaoCamas { get; set; } = new List<BedsDTO>();
+    public bool AceitaCamaExtra { get; set; } = false;
+    public bool AceitaBerco { get; set; } = false;
+    public string? Descricao { get; set; }
+    public DateTime? DeletedAt { get; set; }
   }
 }

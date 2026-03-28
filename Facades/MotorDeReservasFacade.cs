@@ -63,7 +63,7 @@ namespace Turify.Facades
           MinDays = disponibilidade.MinDays,
           MaxDays = disponibilidade.MaxDays,
           Reembolsavel = disponibilidade.Reembolsavel,
-          QuartosModelId = quarto.Id,
+          RoomId = quarto.Id,
           ReservationId = 1111,
         };
         var cacheKey = $"availability:{quartoId}";
@@ -110,7 +110,7 @@ namespace Turify.Facades
 
         // Todas as áreas que se sobrepõem ao dia (por dia)
         var areaReserva = await _context.QuartoAvailable
-          .Where(d => d.QuartosModelId == quartoGuid && d.EndDate >= dayStart && d.StartDate <= dayEnd)
+          .Where(d => d.RoomId == quartoGuid && d.EndDate >= dayStart && d.StartDate <= dayEnd)
           .OrderBy(d => d.StartDate)
           .ToListAsync();
 
@@ -137,7 +137,7 @@ namespace Turify.Facades
               MinDays = area.MinDays,
               MaxDays = area.MaxDays,
               Reembolsavel = area.Reembolsavel,
-              QuartosModelId = area.QuartosModelId
+              RoomId = area.RoomId
             };
             await _context.QuartoAvailable.AddAsync(left);
           }
@@ -154,7 +154,7 @@ namespace Turify.Facades
             MinDays = disponibilidadeDay.MinDays,
             MaxDays = disponibilidadeDay.MaxDays,
             Reembolsavel = true,
-            QuartosModelId = area.QuartosModelId
+            RoomId = area.RoomId
           };
           await _context.QuartoAvailable.AddAsync(daySegment);
 
@@ -172,7 +172,7 @@ namespace Turify.Facades
               MinDays = area.MinDays,
               MaxDays = area.MaxDays,
               Reembolsavel = area.Reembolsavel,
-              QuartosModelId = area.QuartosModelId
+              RoomId = area.RoomId
             };
             await _context.QuartoAvailable.AddAsync(right);
           }
@@ -208,7 +208,7 @@ namespace Turify.Facades
         //2. Busca no banco (fonte de verdade)
         Guid quartoGuid = new Guid(quartoId);
         var disponibilidades = await _context.QuartoAvailable
-        .Where(qa => qa.QuartosModelId == quartoGuid)
+        .Where(qa => qa.RoomId == quartoGuid)
         .AsNoTracking()
         .ToListAsync();
 
@@ -244,7 +244,7 @@ namespace Turify.Facades
 
         QuartoReservas obj = new QuartoReservas
         {
-          QuartosModelId = quarto.Id,
+          RoomId = quarto.Id,
           ReservaStatus = (int)reserva.ReservaStatus,
           Checkin = reserva.Checkin,
           Checkout = reserva.Checkout,
@@ -259,7 +259,7 @@ namespace Turify.Facades
 
         // Todas as áreas que se sobrepõem ao período (por tempo)
         var areaReserva = await _context.QuartoAvailable
-          .Where(d => d.QuartosModelId == quartoGuid && d.EndDate >= reserva.Checkin && d.StartDate <= reserva.Checkout)
+          .Where(d => d.RoomId == quartoGuid && d.EndDate >= reserva.Checkin && d.StartDate <= reserva.Checkout)
           .OrderBy(d => d.StartDate)
           .ToListAsync();
 
@@ -270,7 +270,7 @@ namespace Turify.Facades
         if (reserva.EarlyCheckin == true)
         {
           var hasAnyCheckoutOnCheckinDate = await _context.QuartoReservas
-            .AnyAsync(r => r.QuartosModelId == quartoGuid && r.Checkout.Date == reserva.Checkin.Date);
+            .AnyAsync(r => r.RoomId == quartoGuid && r.Checkout.Date == reserva.Checkin.Date);
 
           if (hasAnyCheckoutOnCheckinDate)
             return Retorno<QuartoReservas>.Erro("Early check-in não permitido: já existe checkout na mesma data.");
@@ -279,7 +279,7 @@ namespace Turify.Facades
         // Tratamento especial: permitir que o checkin coincida com o checkout de outra reserva
         // desde que não exista uma reserva com LateCheckout = true para essa data.
         bool hasLateCheckoutOnCheckinDate = await _context.QuartoReservas
-          .AnyAsync(r => r.QuartosModelId == quartoGuid && r.Checkout.Date == reserva.Checkin.Date && (r.LateCheckout ?? false));
+          .AnyAsync(r => r.RoomId == quartoGuid && r.Checkout.Date == reserva.Checkin.Date && (r.LateCheckout ?? false));
 
         if (hasLateCheckoutOnCheckinDate)
         {
@@ -375,7 +375,7 @@ namespace Turify.Facades
               MinDays = area.MinDays,
               MaxDays = area.MaxDays,
               Reembolsavel = area.Reembolsavel,
-              QuartosModelId = area.QuartosModelId
+              RoomId = area.RoomId
             };
             await _context.QuartoAvailable.AddAsync(left);
           }
@@ -392,7 +392,7 @@ namespace Turify.Facades
             MinDays = area.MinDays,
             MaxDays = area.MaxDays,
             Reembolsavel = area.Reembolsavel,
-            QuartosModelId = area.QuartosModelId
+            RoomId = area.RoomId
           };
           await _context.QuartoAvailable.AddAsync(bookedSegment);
 
@@ -410,7 +410,7 @@ namespace Turify.Facades
               MinDays = area.MinDays,
               MaxDays = area.MaxDays,
               Reembolsavel = area.Reembolsavel,
-              QuartosModelId = area.QuartosModelId
+              RoomId = area.RoomId
             };
             await _context.QuartoAvailable.AddAsync(right);
           }
@@ -491,12 +491,12 @@ namespace Turify.Facades
         Guid quartoGuid = new Guid(quartoId);
 
         var reservas = await _context.QuartoReservas
-        .Where(qa => qa.QuartosModelId == quartoGuid)
+        .Where(qa => qa.RoomId == quartoGuid)
         .Include(h => h.Hospede)
         .Select(r => new RetornoReservasDTO
         {
           Id = r.Id.ToString(),
-          QuartosModelId = r.QuartosModelId.ToString(),
+          RoomId = r.RoomId.ToString(),
           ReservaStatus = r.ReservaStatus,
           Checkin = r.Checkin,
           Checkout = r.Checkout,
@@ -562,7 +562,7 @@ namespace Turify.Facades
     public async Task<bool> VerificaDatasOK(AddDisponibilidadeDTO disponibilidade, Guid quartoId)
     {
       var disponiExistente = await _context.QuartoAvailable.Where(d =>
-      d.QuartosModelId == quartoId &&
+      d.RoomId == quartoId &&
       d.StartDate <= disponibilidade.EndDate &&
       d.EndDate >= disponibilidade.StartDate
       ).ToListAsync();
@@ -576,7 +576,7 @@ namespace Turify.Facades
     {
       // Cobertura por dias; incluir a data de checkout
       var overlapping = await _context.QuartoAvailable
-        .Where(d => d.QuartosModelId == quartoId && d.EndDate >= reserva.Checkin && d.StartDate <= reserva.Checkout)
+        .Where(d => d.RoomId == quartoId && d.EndDate >= reserva.Checkin && d.StartDate <= reserva.Checkout)
         .OrderBy(d => d.StartDate)
         .ToListAsync();
 

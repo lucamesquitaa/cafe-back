@@ -8,12 +8,14 @@ namespace Turify.Models
     [Key]
     public Guid Id { get; set; } = Guid.NewGuid();
   
-    public Guid? DetalhesModelId { get; set; }
-    [ForeignKey(nameof(DetalhesModelId))]
+    [Column("DetalhesModelId")]
+    public Guid? HotelId { get; set; }
+    [ForeignKey(nameof(HotelId))]
     public DetalhesModel? Detalhes { get; set; }
 
-    public Guid? QuartosModelId { get; set; }
-    [ForeignKey(nameof(QuartosModelId))]
+    [Column("QuartosModelId")]
+    public Guid? RoomId { get; set; }
+    [ForeignKey(nameof(RoomId))]
     public QuartosModel? Quartos { get; set; }
 
     public string Alt { get; set; } = string.Empty;

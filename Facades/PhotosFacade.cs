@@ -101,7 +101,7 @@ namespace Turify.Facades
             FotosDetalhesModel img = new FotosDetalhesModel
             {
               Id = fileId,
-              QuartosModelId = quartoGuid,
+              RoomId = quartoGuid,
               Alt = objectName,
               Url = publicUrl,
               Stared = false
@@ -146,7 +146,7 @@ namespace Turify.Facades
             FotosDetalhesModel img = new FotosDetalhesModel
             {
               Id = fileId,
-              DetalhesModelId = hotelGuid,
+              HotelId = hotelGuid,
               Alt = objectName,
               Url = publicUrl,
               Stared = false
@@ -205,7 +205,7 @@ namespace Turify.Facades
           return Retorno<IEnumerable<GetAllPhotos>>.Erro("HotelId não encontrado.");
 
         var photos = await _context.Photos
-            .Where(p => p.DetalhesModelId == hotelGuid)
+            .Where(p => p.HotelId == hotelGuid)
             .Select(p => new GetAllPhotos
             {
               Id = p.Id,
@@ -236,7 +236,7 @@ namespace Turify.Facades
           return Retorno<IEnumerable<GetAllPhotos>>.Erro("QuartoId não encontrado.");
 
         var photos = await _context.Photos
-            .Where(p => p.QuartosModelId == quartoGuid)
+            .Where(p => p.RoomId == quartoGuid)
             .Select(p => new GetAllPhotos
             {
               Id = p.Id,

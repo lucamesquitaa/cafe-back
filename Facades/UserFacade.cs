@@ -96,8 +96,8 @@ namespace Turify.Facades
           return Retorno<IEnumerable<GetAllManagers>>.Erro("Usuário não possui permissão para acessar esta informação.");
 
         var usersLinkedHoteis = await _context.UsuarioPermissao
-          .Where(u => u.DetalhesModelId == hotelIdGuid)
-          .Select(x => new GetAllManagers { Email = x.UserModelEmail, Role = x.Role })
+          .Where(u => u.HotelId == hotelIdGuid)
+          .Select(x => new GetAllManagers { Email = x.User!.Email, Role = x.Role })
           .ToListAsync();
 
         return Retorno<IEnumerable<GetAllManagers>>.Ok(usersLinkedHoteis, "Lista de usuários com permissão obtida com sucesso.");
@@ -151,8 +151,7 @@ namespace Turify.Facades
           var permissions = new UsuarioPermissoes
           {
             Id = Guid.NewGuid(),
-            DetalhesModelId = Guid.Parse(hotelId),
-            UserModelEmail = email,
+            HotelId = Guid.Parse(hotelId),
             UserModelId = userManager.Id,
             Role = newRole
           };
@@ -200,7 +199,7 @@ namespace Turify.Facades
           return Retorno.Erro($"Usuário {email} não encontrado.");
         
           var permissions = await _context.UsuarioPermissao
-                                          .FirstOrDefaultAsync(u => u.DetalhesModelId == hotelIdGuid && u.UserModelId == userManager.Id);
+                                          .FirstOrDefaultAsync(u => u.HotelId == hotelIdGuid && u.UserModelId == userManager.Id);
 
           _context.UsuarioPermissao.Remove(permissions);
           await _context.SaveChangesAsync();

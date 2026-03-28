@@ -47,7 +47,10 @@ namespace Turify.Facades
              Name = h.Name,
              Description = h.Description,
              Url = h.Url,
-           }).ToListAsync();
+             DeletedAt = string.IsNullOrEmpty(h.DeletedAt.ToString()) ? null : h.DeletedAt!.ToString()
+           })
+           .Where(w => w.DeletedAt == null)
+           .ToListAsync();
 
         return Retorno<IEnumerable<GetAllHoteis>>.Ok(hoteis, "Hoteis buscados com sucesso.");
       }
@@ -89,7 +92,9 @@ namespace Turify.Facades
                                           Swimming = u.Swimming,
                                           Cleaning = u.Cleaning,
                                           Gym = u.Gym,
+                                          DeletedAt = string.IsNullOrEmpty(u.DeletedAt.ToString()) ? null : u.DeletedAt!.ToString()
                                         })
+                                        .Where(w => w.DeletedAt == null)
                                         .FirstOrDefaultAsync();
 
         return Retorno<GetDetalheById>.Ok(hotel, "Dados do hotel buscados com sucesso.");
@@ -106,7 +111,7 @@ namespace Turify.Facades
       {
         var hotelIdGuid = Guid.Parse(hotelId);
 
-        var hotel = await _context.Hotel.Where(u => u.Id == hotelIdGuid)
+        var hotel = await _context.Hotel.Where(u => u.Id == hotelIdGuid && u.DeletedAt == null)
                                         .AsNoTracking()
                                         .FirstOrDefaultAsync();
 
@@ -135,7 +140,7 @@ namespace Turify.Facades
         var hotelIds = await _context.UsuarioPermissao
                                   .Where(up => up.UserModelId == user.Id &&
                                                 up.Role == RoleUserModel.Admin || up.Role == RoleUserModel.Manager || up.Role == RoleUserModel.Turify)
-                                  .Select(up => up.DetalhesModelId)
+                                  .Select(up => up.HotelId)
                                   .ToListAsync();
 
         var hoteis = await _context.Hotel.Where(u => hotelIds.Contains(u.Id))
@@ -145,7 +150,10 @@ namespace Turify.Facades
                                           Name = h.Name,
                                           Description = h.Description,
                                           Url = h.Url,
-                                        }).ToListAsync();
+                                          DeletedAt = string.IsNullOrEmpty(h.DeletedAt.ToString()) ? null : h.DeletedAt.ToString()
+                                        })
+                                        .Where(w => w.DeletedAt == null)
+                                        .ToListAsync();
 
         return Retorno<IEnumerable<GetAllHoteis>>.Ok(hoteis, "Dados buscados com sucesso!"); ;
       }
@@ -178,8 +186,7 @@ namespace Turify.Facades
         var permissao = new UsuarioPermissoes
         {
           Id = Guid.NewGuid(),
-          DetalhesModelId = novoId,
-          UserModelEmail = userEmail,
+          HotelId = novoId,
           UserModelId = user.Id,
           Role = RoleUserModel.Admin
         };
