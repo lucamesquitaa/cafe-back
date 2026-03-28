@@ -27,5 +27,6 @@
     public bool? Swimming { get; set; }
     public bool? Cleaning { get; set; }
     public bool? Gym { get; set; }
+    public string? DeletedAt { get; set; }
   }
 }

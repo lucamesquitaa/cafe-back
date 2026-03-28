@@ -53,14 +53,14 @@ namespace Turify.Data
       modelBuilder.Entity<DetalhesModel>()
           .HasMany(h => h.Photos)
           .WithOne()
-          .HasForeignKey(p => p.DetalhesModelId)
+          .HasForeignKey(p => p.HotelId)
           .OnDelete(DeleteBehavior.Cascade);
 
       // Relacionamento 1:N entre QuartosModel e FotosDetalhesModel
       modelBuilder.Entity<QuartosModel>()
           .HasMany(h => h.Photos)
           .WithOne()
-          .HasForeignKey(p => p.QuartosModelId)
+          .HasForeignKey(p => p.RoomId)
           .OnDelete(DeleteBehavior.Cascade);
 
 
@@ -68,14 +68,14 @@ namespace Turify.Data
       modelBuilder.Entity<DetalhesModel>()
           .HasMany(h => h.Contacts)
           .WithOne()
-          .HasForeignKey(c => c.DetalhesModelId)
+          .HasForeignKey(c => c.HotelId)
           .OnDelete(DeleteBehavior.Cascade);
 
       // Realacionamento 1:N
       modelBuilder.Entity<DetalhesModel>()
           .HasMany(h => h.Permissions)
           .WithOne()
-          .HasForeignKey(c => c.DetalhesModelId)
+          .HasForeignKey(c => c.HotelId)
           .OnDelete(DeleteBehavior.Cascade);
 
       // Realacionamento 1:N
@@ -89,13 +89,13 @@ namespace Turify.Data
       modelBuilder.Entity<QuartosModel>()
          .HasMany(h => h.Disponibilidade)
          .WithOne()
-         .HasForeignKey(p => p.QuartosModelId)
+         .HasForeignKey(p => p.RoomId)
          .OnDelete(DeleteBehavior.Cascade);
 
       modelBuilder.Entity<QuartosModel>()
          .HasMany(h => h.Reservas)
          .WithOne()
-         .HasForeignKey(p => p.QuartosModelId)
+         .HasForeignKey(p => p.RoomId)
          .OnDelete(DeleteBehavior.Cascade);
     }
   }

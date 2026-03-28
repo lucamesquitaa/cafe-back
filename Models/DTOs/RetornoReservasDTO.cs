@@ -3,7 +3,7 @@
   public class RetornoReservasDTO
   {
       public string? Id { get; set; }
-      public string? QuartosModelId { get; set; }
+      public string? RoomId { get; set; }
       public int ReservaStatus { get; set; }
       public DateTime Checkin { get; set; }
       public DateTime Checkout { get; set; }

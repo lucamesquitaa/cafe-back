@@ -36,7 +36,7 @@ namespace Turify.Facades
       {
         var hotelGuid = Guid.Parse(hotelId);
 
-        var quartos = await _context.Quartos.Where(u => u.DetalhesModelId == hotelGuid)
+        var quartos = await _context.Quartos.Where(u => u.HotelId == hotelGuid)
                                             .Include(q => q.Category)
                                             .Include(q => q.Beds)
                                             .AsNoTracking()
@@ -130,7 +130,7 @@ namespace Turify.Facades
         }
 
         // INSERT
-        quartos.DetalhesModelId = hotelGuid;
+        quartos.HotelId = hotelGuid;
 
         if (resolvedCats.Any())
           quartos.Category = resolvedCats;
@@ -145,6 +145,85 @@ namespace Turify.Facades
         throw new Exception("Erro ao processar a solicitação. id: " + hotelId + "obj: " + JsonSerializer.Serialize(quartos));
       }
     }
+
+    public async Task<IRetorno<QuartosMassaResultDTO>> PostQuartosMassa(string hotelId, CriarQuartosMassaDTO dto)
+    {
+      try
+      {
+        var hotelGuid = Guid.Parse(hotelId);
+
+        // Validar se TipoQuartoId pertence ao hotel
+        var tipoQuarto = await _context.CategoryQuarto
+            .Include(c => c.ConfiguracaoCamas)
+            .FirstOrDefaultAsync(c => c.Id == dto.TipoQuartoId && c.HotelId == hotelGuid && c.DeletedAt == null);
+
+        if (tipoQuarto == null)
+          return Retorno<QuartosMassaResultDTO>.Erro("Tipo de quarto não encontrado ou não pertence ao hotel.");
+
+        // Montar lista de números a criar
+        List<int> numeros;
+        if (dto.ModoGeracao == "lista")
+        {
+          if (dto.ListaManual == null || dto.ListaManual.Count == 0)
+            return Retorno<QuartosMassaResultDTO>.Erro("ListaManual é obrigatória no modo 'lista'.");
+          numeros = dto.ListaManual.Distinct().OrderBy(n => n).ToList();
+        }
+        else // range
+        {
+          if (dto.RangeInicio == null || dto.RangeFim == null)
+            return Retorno<QuartosMassaResultDTO>.Erro("RangeInicio e RangeFim são obrigatórios no modo 'range'.");
+          if (dto.RangeInicio >= dto.RangeFim)
+            return Retorno<QuartosMassaResultDTO>.Erro("RangeInicio deve ser menor que RangeFim.");
+          var quantidade = dto.RangeFim.Value - dto.RangeInicio.Value + 1;
+          if (quantidade > 200)
+            return Retorno<QuartosMassaResultDTO>.Erro("O range não pode superar 200 quartos por chamada.");
+          numeros = Enumerable.Range(dto.RangeInicio.Value, quantidade).ToList();
+        }
+
+        // Verificar conflitos com quartos existentes no hotel
+        var numerosExistentes = await _context.Quartos
+            .Where(q => q.HotelId == hotelGuid && numeros.Contains(q.Numero) && q.DeletedAt == null)
+            .Select(q => q.Numero)
+            .ToListAsync();
+
+        if (numerosExistentes.Any())
+          return Retorno<QuartosMassaResultDTO>.Erro(
+              "Conflito: já existem quartos com os números informados. Nenhum quarto foi criado.",
+              new QuartosMassaResultDTO { Criados = 0, Numeros = new List<int>(), Conflitos = numerosExistentes });
+
+        // Gerar os quartos herdando dados do tipo
+        var novosQuartos = numeros.Select(numero => new QuartosModel
+        {
+          HotelId = hotelGuid,
+          Numero = numero,
+          Name = $"{tipoQuarto.Name} {numero}",
+          Description = tipoQuarto.Descricao ?? string.Empty,
+          MaxOcupation = tipoQuarto.MaxHospedes ?? 0,
+          Diff = dto.Andar,
+          Category = new List<CategoryQuarto> { tipoQuarto },
+          Beds = tipoQuarto.ConfiguracaoCamas
+              .Select(b => new BedsDTO { BedType = b.BedType, Quantity = b.Quantity })
+              .ToList(),
+        }).ToList();
+
+        await _context.Quartos.AddRangeAsync(novosQuartos);
+        await _context.SaveChangesAsync();
+
+        var result = new QuartosMassaResultDTO
+        {
+          Criados = novosQuartos.Count,
+          Numeros = numeros,
+          Conflitos = new List<int>()
+        };
+
+        return Retorno<QuartosMassaResultDTO>.Ok(result);
+      }
+      catch (Exception e)
+      {
+        throw new Exception("Erro ao processar a solicitação. hotelId: " + hotelId + " detalhe: " + e.Message);
+      }
+    }
+
     public async Task<IRetorno> DeleteQuartosFacade(string hotelId, string quartoId)
     {
       try
@@ -161,7 +240,7 @@ namespace Turify.Facades
 
         // Cancelar reservas futuras (soft delete)
         var reservasFuturas = await _context.QuartoReservas
-            .Where(r => r.QuartosModelId == quartoGuid && r.Checkout > now && r.CancelledAt == null)
+            .Where(r => r.RoomId == quartoGuid && r.Checkout > now && r.CancelledAt == null)
             .ToListAsync();
 
         foreach (var reserva in reservasFuturas)
@@ -172,7 +251,7 @@ namespace Turify.Facades
 
         // Remover tarifas futuras (hard delete — sem valor histórico)
         var tarifasFuturas = await _context.QuartoAvailable
-            .Where(a => a.QuartosModelId == quartoGuid && a.EndDate > now)
+            .Where(a => a.RoomId == quartoGuid && a.EndDate > now)
             .ToListAsync();
 
         _context.QuartoAvailable.RemoveRange(tarifasFuturas);

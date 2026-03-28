@@ -9,6 +9,7 @@ namespace Turify.Models.DTOs
     public string Name { get; set; } = String.Empty;
     public string Description { get; set; } = String.Empty;
     public string Url { get; set; } = String.Empty;
+    public string DeletedAt { get; set; } = String.Empty;
     public IEnumerable<string> PhotosStared { get; set; } = new List<string>();
   }
 }

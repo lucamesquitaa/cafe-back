@@ -43,8 +43,27 @@ namespace Turify.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("DetalhesModelId")
-                        .HasColumnType("uuid");
+                    b.Property<bool>("AceitaBerco")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AceitaCamaExtra")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Descricao")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("HotelId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DetalhesModelId");
+
+                    b.Property<int?>("MaxHospedes")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("MinHospedes")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -55,7 +74,7 @@ namespace Turify.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DetalhesModelId");
+                    b.HasIndex("HotelId");
 
                     b.ToTable("CategoryQuarto");
                 });
@@ -77,8 +96,9 @@ namespace Turify.Migrations
                     b.Property<Guid>("DetalhesModelId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("DetalhesModelId1")
-                        .HasColumnType("uuid");
+                    b.Property<Guid>("HotelId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DetalhesModelId");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -89,9 +109,13 @@ namespace Turify.Migrations
 
                     b.HasIndex("DetalhesId");
 
-                    b.HasIndex("DetalhesModelId");
+                    b.HasIndex("HotelId");
 
-                    b.ToTable("Contacts");
+                    b.ToTable("Contacts", t =>
+                        {
+                            t.Property("DetalhesModelId")
+                                .HasColumnName("DetalhesModelId1");
+                        });
                 });
 
             modelBuilder.Entity("Turify.Models.DTOs.BedsDTO", b =>
@@ -105,6 +129,9 @@ namespace Turify.Migrations
                     b.Property<int>("BedType")
                         .HasColumnType("integer");
 
+                    b.Property<Guid?>("CategoryQuartoId")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("Quantity")
                         .HasColumnType("integer");
 
@@ -112,6 +139,8 @@ namespace Turify.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CategoryQuartoId");
 
                     b.HasIndex("QuartosModelId");
 
@@ -286,14 +315,16 @@ namespace Turify.Migrations
                     b.Property<Guid?>("DetalhesId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("DetalhesModelId")
-                        .HasColumnType("uuid");
+                    b.Property<Guid?>("HotelId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DetalhesModelId");
 
                     b.Property<Guid?>("QuartosId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("QuartosModelId")
-                        .HasColumnType("uuid");
+                    b.Property<Guid?>("RoomId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("QuartosModelId");
 
                     b.Property<bool?>("Stared")
                         .HasColumnType("boolean");
@@ -306,11 +337,11 @@ namespace Turify.Migrations
 
                     b.HasIndex("DetalhesId");
 
-                    b.HasIndex("DetalhesModelId");
+                    b.HasIndex("HotelId");
 
                     b.HasIndex("QuartosId");
 
-                    b.HasIndex("QuartosModelId");
+                    b.HasIndex("RoomId");
 
                     b.ToTable("Photos");
                 });
@@ -411,14 +442,15 @@ namespace Turify.Migrations
                     b.Property<Guid?>("QuartosId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("QuartosModelId")
-                        .HasColumnType("uuid");
-
                     b.Property<bool>("Reembolsavel")
                         .HasColumnType("boolean");
 
                     b.Property<int?>("ReservationId")
                         .HasColumnType("integer");
+
+                    b.Property<Guid?>("RoomId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("QuartosModelId");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("timestamp with time zone");
@@ -433,7 +465,7 @@ namespace Turify.Migrations
 
                     b.HasIndex("QuartosId");
 
-                    b.HasIndex("QuartosModelId");
+                    b.HasIndex("RoomId");
 
                     b.ToTable("QuartoAvailable");
                 });
@@ -477,17 +509,18 @@ namespace Turify.Migrations
                     b.Property<Guid?>("QuartosId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("QuartosModelId")
-                        .HasColumnType("uuid");
-
                     b.Property<int>("ReservaStatus")
                         .HasColumnType("integer");
+
+                    b.Property<Guid?>("RoomId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("QuartosModelId");
 
                     b.HasKey("Id");
 
                     b.HasIndex("QuartosId");
 
-                    b.HasIndex("QuartosModelId");
+                    b.HasIndex("RoomId");
 
                     b.ToTable("QuartoReservas");
                 });
@@ -521,9 +554,6 @@ namespace Turify.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid>("DetalhesModelId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Diff")
                         .HasColumnType("text");
 
@@ -532,6 +562,10 @@ namespace Turify.Migrations
 
                     b.Property<bool?>("Fridge")
                         .HasColumnType("boolean");
+
+                    b.Property<Guid>("HotelId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DetalhesModelId");
 
                     b.Property<int>("MaxOcupation")
                         .HasColumnType("integer");
@@ -566,7 +600,7 @@ namespace Turify.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DetalhesModelId");
+                    b.HasIndex("HotelId");
 
                     b.ToTable("Quartos");
                 });
@@ -614,8 +648,9 @@ namespace Turify.Migrations
                     b.Property<Guid>("DetalhesModelId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("DetalhesModelId1")
-                        .HasColumnType("uuid");
+                    b.Property<Guid>("HotelId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DetalhesModelId");
 
                     b.Property<string>("Role")
                         .IsRequired()
@@ -623,10 +658,6 @@ namespace Turify.Migrations
 
                     b.Property<Guid?>("UserId")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("UserModelEmail")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<Guid>("UserModelId")
                         .HasColumnType("uuid");
@@ -638,13 +669,17 @@ namespace Turify.Migrations
 
                     b.HasIndex("DetalhesId");
 
-                    b.HasIndex("DetalhesModelId");
+                    b.HasIndex("HotelId");
 
                     b.HasIndex("UserId");
 
                     b.HasIndex("UserModelId");
 
-                    b.ToTable("UsuarioPermissao");
+                    b.ToTable("UsuarioPermissao", t =>
+                        {
+                            t.Property("DetalhesModelId")
+                                .HasColumnName("DetalhesModelId1");
+                        });
                 });
 
             modelBuilder.Entity("QuartoCategory", b =>
@@ -666,7 +701,7 @@ namespace Turify.Migrations
                 {
                     b.HasOne("Turify.Models.DetalhesModel", "Detalhes")
                         .WithMany()
-                        .HasForeignKey("DetalhesModelId")
+                        .HasForeignKey("HotelId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -681,7 +716,7 @@ namespace Turify.Migrations
 
                     b.HasOne("Turify.Models.DetalhesModel", null)
                         .WithMany("Contacts")
-                        .HasForeignKey("DetalhesModelId")
+                        .HasForeignKey("HotelId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -690,6 +725,10 @@ namespace Turify.Migrations
 
             modelBuilder.Entity("Turify.Models.DTOs.BedsDTO", b =>
                 {
+                    b.HasOne("Turify.Models.CategoryQuarto", null)
+                        .WithMany("ConfiguracaoCamas")
+                        .HasForeignKey("CategoryQuartoId");
+
                     b.HasOne("Turify.Models.QuartosModel", null)
                         .WithMany("Beds")
                         .HasForeignKey("QuartosModelId");
@@ -703,7 +742,7 @@ namespace Turify.Migrations
 
                     b.HasOne("Turify.Models.DetalhesModel", null)
                         .WithMany("Photos")
-                        .HasForeignKey("DetalhesModelId")
+                        .HasForeignKey("HotelId")
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("Turify.Models.QuartosModel", "Quartos")
@@ -712,7 +751,7 @@ namespace Turify.Migrations
 
                     b.HasOne("Turify.Models.QuartosModel", null)
                         .WithMany("Photos")
-                        .HasForeignKey("QuartosModelId")
+                        .HasForeignKey("RoomId")
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Detalhes");
@@ -738,7 +777,7 @@ namespace Turify.Migrations
 
                     b.HasOne("Turify.Models.QuartosModel", null)
                         .WithMany("Disponibilidade")
-                        .HasForeignKey("QuartosModelId")
+                        .HasForeignKey("RoomId")
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Quartos");
@@ -752,7 +791,7 @@ namespace Turify.Migrations
 
                     b.HasOne("Turify.Models.QuartosModel", null)
                         .WithMany("Reservas")
-                        .HasForeignKey("QuartosModelId")
+                        .HasForeignKey("RoomId")
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Quartos");
@@ -762,7 +801,7 @@ namespace Turify.Migrations
                 {
                     b.HasOne("Turify.Models.DetalhesModel", "Detalhes")
                         .WithMany("Quartos")
-                        .HasForeignKey("DetalhesModelId")
+                        .HasForeignKey("HotelId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -777,7 +816,7 @@ namespace Turify.Migrations
 
                     b.HasOne("Turify.Models.DetalhesModel", null)
                         .WithMany("Permissions")
-                        .HasForeignKey("DetalhesModelId")
+                        .HasForeignKey("HotelId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -794,6 +833,11 @@ namespace Turify.Migrations
                     b.Navigation("Detalhes");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Turify.Models.CategoryQuarto", b =>
+                {
+                    b.Navigation("ConfiguracaoCamas");
                 });
 
             modelBuilder.Entity("Turify.Models.DetalhesModel", b =>
