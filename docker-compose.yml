@@ -2,27 +2,27 @@ version: "3.8"
 
 services:
   postgres:
-    image: postgres:16  # especifica a versao para mais previsibilidade
+    image: postgres:17  # especifica a versao para mais previsibilidade
     container_name: postgres_local
     restart: always
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: lucam
+      POSTGRES_PASSWORD: Xy4MMes6TZj
+      POSTGRES_DB: hotelariadb
     ports:  
       - "5432:5432"
     volumes:
       - ./postgres-data:/var/lib/postgresql/data
 
   pgadmin:
-    image: dpage/pgadmin4:8
+    image: dpage/pgadmin4
     container_name: pgadmin_local
     restart: always
     environment:
       PGADMIN_DEFAULT_EMAIL: 'lucamesquitaa@gmail.com'
       PGADMIN_DEFAULT_PASSWORD: 'admin'
     ports:
-      - "8081:81"
+      - "9090:80"
     depends_on:
       - postgres
 
@@ -45,31 +45,18 @@ services:
     container_name: turify_local
     restart: always
     environment:
-      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ASPNETCORE_ENVIRONMENT: Development
       PORT: 8080
-      ConnectionStrings__Default: "Host=postgres;Port=5432;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}"
-      jwttoken: ${JWT_SECRET}
-      senSiteWeb: ${SEN_SITE_WEB}
-      Authentication__Google__ClientId: ${GOOGLE_CLIENT_ID}
+      DB_HOST: postgres  # use o nome do servico do Postgres, nao o container_name
+      DB_USER: lucam
+      DB_PASSWORD: Xy4MMes6TZj
+      DB_NAME: hotelariadb  # adicione para ficar explicito
       REDIS_HOST: redis:6379
-    volumes:
-      - ./HOMOLOG:/app/HOMOLOG:ro
     ports:
       - "8080:8080"
     depends_on:
       - postgres
       - redis
-
-  nginx:
-    image: nginx:latest
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
-      - /etc/letsencrypt:/etc/letsencrypt
-    depends_on:
-       - turify
 
 volumes:
   redis-data:
