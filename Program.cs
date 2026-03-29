@@ -168,6 +168,16 @@ builder.Services.AddSwaggerGen(c =>
 
 
 var app = builder.Build();
+var swaggerProvider = app.Services.GetRequiredService<Swashbuckle.AspNetCore.Swagger.ISwaggerProvider>();
+try
+{
+  var swagger = swaggerProvider.GetSwagger("v1");
+  Console.WriteLine("[SWAGGER OK] Documento gerado com sucesso.");
+}
+catch (Exception ex)
+{
+  Console.WriteLine($"[SWAGGER FATAL] {ex}");
+}
 app.UseForwardedHeaders();
 using (var scope = app.Services.CreateScope())
 {
