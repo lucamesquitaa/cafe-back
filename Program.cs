@@ -151,8 +151,19 @@ builder.Services.AddSwaggerGen(c =>
  }
  });
 
- // Ignora erros de filtros personalizados no Swagger
- c.OperationFilter<SwaggerOperationFilter>();
+  c.DocInclusionPredicate((docName, apiDesc) =>
+  {
+    try
+    {
+      var _ = apiDesc.ActionDescriptor.DisplayName;
+      return true;
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine($"[SWAGGER ERROR] {ex.Message}");
+      return true;
+    }
+  });
 });
 
 
