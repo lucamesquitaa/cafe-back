@@ -67,7 +67,7 @@ namespace Turify.Controllers
     [Authorize]
     [ValidateHotelAccess]
     [HttpPost("PostQuartosMassa/{hotelId}")]
-    public async Task<IActionResult> PostQuartosMassa(string hotelId, [FromBody] CriarQuartosMassaDTO dto)
+    public async Task<IActionResult> PostQuartosMassa([FromBody] CriarQuartosMassaDTO dto, string hotelId)
     {
       var result = await _quartosFacade.PostQuartosMassa(hotelId, dto);
 
