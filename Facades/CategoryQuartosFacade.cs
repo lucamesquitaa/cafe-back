@@ -1,10 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Humanizer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
+using System.Text.Json;
 using Turify.Data;
 using Turify.Facades.Interfaces;
 using Turify.Models;
+using Turify.Models.DTOs;
 using Turify.Services;
-using System.Text.Json;
 
 namespace Turify.Facades
 {
@@ -44,15 +46,45 @@ namespace Turify.Facades
         throw new Exception("Erro ao processar a solicitação. id: " + hotelId);
       }
     }
-    public async Task<IRetorno> PostCategoryQuartos(CategoryQuarto obj, string hotelId)
+
+    public async Task<IRetorno<CategoryQuarto>> GetCategoryQuartoById(string id)
+    {
+      try
+      {
+        var guid = Guid.Parse(id);
+
+        var categoria = await _context.CategoryQuarto
+            .FirstOrDefaultAsync(c => c.Id == guid && c.DeletedAt == null);
+
+        return Retorno<CategoryQuarto>.Ok(categoria, $"Dados buscados com sucesso.");
+
+      }
+      catch (Exception ex)
+      {
+        throw new Exception("Erro ao processar a solicitação. id: " + id);
+      }
+    }
+
+    public async Task<IRetorno> PostCategoryQuartos(CriarCategoryQuartoDTO obj, string hotelId)
     {
       try
       {
         Guid hotelGuid = Guid.Parse(hotelId); // Validate GUID format
 
-        obj.HotelId = hotelGuid;
+        var objTratado = new CategoryQuarto
+        {
+          Id = Guid.NewGuid(),
+          Name = obj.Name,
+          MinHospedes = obj.MinHospedes,
+          MaxHospedes = obj.MaxHospedes,
+          Descricao = obj.Descricao,
+          AceitaCamaExtra = obj.AceitaCamaExtra,
+          AceitaBerco = obj.AceitaBerco,
+          ConfiguracaoCamas = obj.ConfiguracaoCamas,
+          HotelId = hotelGuid
+        };
 
-        await _context.CategoryQuarto.AddAsync(obj);
+        await _context.CategoryQuarto.AddAsync(objTratado);
         await _context.SaveChangesAsync();
 
         return Retorno.Ok($"Dados cadastrados com sucesso.");
@@ -60,6 +92,38 @@ namespace Turify.Facades
       catch (Exception ex)
       {
         throw new Exception("Erro ao processar a solicitação. id: " + hotelId + " obj: " + JsonSerializer.Serialize(obj) );
+      }
+    }
+
+    public async Task<IRetorno> PutCategoryQuartos( string id, CategoryQuarto obj)
+    {
+      try
+      {
+        var guid = Guid.Parse(id);
+
+        var categoria = await _context.CategoryQuarto
+            .FirstOrDefaultAsync(c => c.Id == guid && c.DeletedAt == null);
+
+        if (categoria == null)
+          return Retorno<CategoryQuarto>.Erro("Tipo de quarto não encontrado.");
+
+        // Atualiza campos
+        categoria.Name = obj.Name;
+        categoria.MinHospedes = obj.MinHospedes;
+        categoria.MaxHospedes = obj.MaxHospedes;
+        categoria.Descricao = obj.Descricao;
+        categoria.AceitaCamaExtra = obj.AceitaCamaExtra;
+        categoria.AceitaBerco = obj.AceitaBerco;
+        categoria.ConfiguracaoCamas = obj.ConfiguracaoCamas;
+
+
+        await _context.SaveChangesAsync();
+
+        return Retorno<CategoryQuarto>.Ok(categoria);
+      }
+      catch (Exception e)
+      {
+        throw new Exception("Erro ao atualizar tipo de quarto: " + e.Message);
       }
     }
 
