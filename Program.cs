@@ -28,7 +28,7 @@ builder.Services.AddCors(options =>
 {
  options.AddPolicy("AllowAngular",
  policy => policy
- .WithOrigins("http://localhost:4200","https://www.turify.com.br", "https://api.turify.com.br")
+ .WithOrigins("http://localhost:4200", "https://api.turify.com.br")
  .AllowAnyHeader()
  .AllowAnyMethod()
  .AllowCredentials());
