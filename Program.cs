@@ -8,6 +8,7 @@ using Microsoft.OpenApi.Models;
 using Turify.Data;
 using Turify.Facades;
 using Turify.Facades.Interfaces;
+using Turify.Filters;
 using Turify.Services;
 using System.Security.Claims;
 using System.Text;
@@ -149,6 +150,9 @@ builder.Services.AddSwaggerGen(c =>
  new string[] {}
  }
  });
+
+ // Ignora erros de filtros personalizados no Swagger
+ c.OperationFilter<SwaggerOperationFilter>();
 });
 
 
