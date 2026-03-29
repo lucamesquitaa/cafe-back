@@ -133,25 +133,10 @@ builder.Services.AddSwaggerGen(c =>
  Name = "Authorization",
  Type = SecuritySchemeType.ApiKey,
  Scheme = "Bearer"
-
  });
 
-  c.DocInclusionPredicate((docName, apiDesc) =>
-  {
-    try
-    {
-      var _ = apiDesc.ActionDescriptor.DisplayName;
-      return true;
-    }
-    catch (Exception ex)
-    {
-      Console.WriteLine($"[SWAGGER ERROR] {ex.Message}");
-      return true;
-    }
-  });
-
-  // Adiciona o requisito de segurança
-  c.AddSecurityRequirement(new OpenApiSecurityRequirement
+ // Adiciona o requisito de segurança
+ c.AddSecurityRequirement(new OpenApiSecurityRequirement
  {
  {
  new OpenApiSecurityScheme
@@ -165,6 +150,9 @@ builder.Services.AddSwaggerGen(c =>
  new string[] {}
  }
  });
+
+ // Ignora erros de filtros personalizados no Swagger
+ c.OperationFilter<SwaggerOperationFilter>();
 });
 
 
