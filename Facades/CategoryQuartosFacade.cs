@@ -37,7 +37,7 @@ namespace Turify.Facades
       {
         Guid hotelGuid = Guid.Parse(hotelId); // Validate GUID format
 
-        var categories = await _context.CategoryQuarto.Where(c => c.HotelId == hotelGuid && c.DeletedAt == null).ToListAsync();
+        var categories = await _context.CategoryQuarto.Where(c => c.HotelId == hotelGuid && c.DeletedAt == null).Include(c => c.ConfiguracaoCamas).ToListAsync();
 
         return Retorno<IEnumerable<CategoryQuarto>>.Ok(categories, $"Dados buscados com sucesso.");
       }
@@ -53,7 +53,7 @@ namespace Turify.Facades
       {
         var guid = Guid.Parse(id);
 
-        var categoria = await _context.CategoryQuarto
+        var categoria = await _context.CategoryQuarto.Include(c => c.ConfiguracaoCamas)
             .FirstOrDefaultAsync(c => c.Id == guid && c.DeletedAt == null);
 
         return Retorno<CategoryQuarto>.Ok(categoria, $"Dados buscados com sucesso.");

@@ -17,10 +17,10 @@ namespace Turify.Models
     public int Numero { get; set; }
     public string Name { get; set; } = string.Empty;
     public ICollection<CategoryQuarto> Category { get; set; } = new List<CategoryQuarto>();
-    public string Description { get; set; } = string.Empty;
+    public string? Description { get; set; }
     public int MaxOcupation { get; set; }
     public bool? Refund { get; set; }
-    public string AreaSize { get; set; } = string.Empty;
+    public string? AreaSize { get; set; } 
     public ICollection<BedsDTO> Beds { get; set; } = new List<BedsDTO>();
     public string? Diff { get; set; }
     public bool? Freeze { get; set; }
