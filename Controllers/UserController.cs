@@ -93,7 +93,7 @@ namespace Turify.Controllers
 
       var token = new JwtSecurityToken(
           claims: claims,
-          expires: DateTime.Now.AddMinutes(30),
+          expires: DateTime.Now.AddHours(24),
           signingCredentials: creds);
 
       return new JwtSecurityTokenHandler().WriteToken(token);
