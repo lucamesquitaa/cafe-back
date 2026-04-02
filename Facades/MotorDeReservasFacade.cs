@@ -209,6 +209,7 @@ namespace Turify.Facades
         Guid quartoGuid = new Guid(quartoId);
         var disponibilidades = await _context.QuartoAvailable
         .Where(qa => qa.RoomId == quartoGuid)
+        .OrderBy(o => o.Number)
         .AsNoTracking()
         .ToListAsync();
 
