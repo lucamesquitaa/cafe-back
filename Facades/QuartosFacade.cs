@@ -39,6 +39,7 @@ namespace Turify.Facades
         var quartos = await _context.Quartos.Where(u => u.HotelId == hotelGuid)
                                             .Include(q => q.Category)
                                             .Include(q => q.Beds)
+                                            .OrderBy(o => o.Numero)
                                             .AsNoTracking()
                                             .ToListAsync();
 
@@ -194,6 +195,7 @@ namespace Turify.Facades
         // Gerar os quartos herdando dados do tipo
         var novosQuartos = numeros.Select(numero => new QuartosModel
         {
+          Id = Guid.NewGuid(),
           HotelId = hotelGuid,
           Numero = numero,
           Name = $"{tipoQuarto.Name} {numero}",
