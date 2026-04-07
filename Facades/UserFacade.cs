@@ -96,6 +96,7 @@ namespace Turify.Facades
           return Retorno<IEnumerable<GetAllManagers>>.Erro("Usuário não possui permissão para acessar esta informação.");
 
         var usersLinkedHoteis = await _context.UsuarioPermissao
+          .Include(u => u.User)
           .Where(u => u.HotelId == hotelIdGuid)
           .Select(x => new GetAllManagers { Email = x.User!.Email, Role = x.Role })
           .ToListAsync();
