@@ -14,6 +14,8 @@ namespace Turify.Models
     [ForeignKey(nameof(UserModelId))]
     public UserModel? User { get; set; }
 
+    public string UserModelEmail { get; set; } = string.Empty;
+
     // FK para DetalhesModel
     [Column("DetalhesModelId")]
     public Guid HotelId { get; set; }
