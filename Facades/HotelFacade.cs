@@ -59,11 +59,11 @@ namespace Turify.Facades
         throw new Exception("Erro ao processar a solicitação.");
       }
     }
-    public async Task<IRetorno<GetDetalheById>> GetDetalhesFacade(string hotelId)
+    public async Task<IRetorno<GetDetalheById>> GetDetalhesFacade(string HotelId)
     {
       try
       {
-        var hotel = await _context.Hotel.Where(u => u.Id.ToString() == hotelId)
+        var hotel = await _context.Hotel.Where(u => u.Id.ToString() == HotelId)
                                         .AsNoTracking()
                                         .Select(u => new GetDetalheById
                                         {
@@ -105,13 +105,13 @@ namespace Turify.Facades
       }
     }
 
-    public async Task<IRetorno<DetalhesModel>> GetDetalhesFacadeByManager(string hotelId)
+    public async Task<IRetorno<DetalhesModel>> GetDetalhesFacadeByManager(string HotelId)
     {
       try
       {
-        var hotelIdGuid = Guid.Parse(hotelId);
+        var HotelIdGuid = Guid.Parse(HotelId);
 
-        var hotel = await _context.Hotel.Where(u => u.Id == hotelIdGuid && u.DeletedAt == null)
+        var hotel = await _context.Hotel.Where(u => u.Id == HotelIdGuid && u.DeletedAt == null)
                                         .AsNoTracking()
                                         .FirstOrDefaultAsync();
 
@@ -119,7 +119,7 @@ namespace Turify.Facades
       }
       catch (Exception e)
       {
-        throw new Exception("Erro ao processar a solicitação. id: " + hotelId );
+        throw new Exception("Erro ao processar a solicitação. id: " + HotelId );
       }
     }
 
@@ -137,13 +137,13 @@ namespace Turify.Facades
         if (user.Id == Guid.Empty)
           return Retorno<IEnumerable<GetAllHoteis>>.Erro("Usuário não encontrado - id.");
 
-        var hotelIds = await _context.UsuarioPermissao
+        var HotelIds = await _context.UsuarioPermissao
                                   .Where(up => up.UserModelId == user.Id &&
                                                 up.Role == RoleUserModel.Admin || up.Role == RoleUserModel.Manager || up.Role == RoleUserModel.Turify)
                                   .Select(up => up.HotelId)
                                   .ToListAsync();
 
-        var hoteis = await _context.Hotel.Where(u => hotelIds.Contains(u.Id))
+        var hoteis = await _context.Hotel.Where(u => HotelIds.Contains(u.Id))
                                         .AsNoTracking().Select(h => new GetAllHoteis
                                         {
                                           Id = h.Id,
@@ -248,10 +248,10 @@ namespace Turify.Facades
     {
       try
       {
-        var hotelId = Guid.Parse(id);
+        var HotelId = Guid.Parse(id);
 
         var hotelExistente = await _context.Hotel
-            .FirstOrDefaultAsync(h => h.Id == hotelId);
+            .FirstOrDefaultAsync(h => h.Id == HotelId);
 
         if (hotelExistente == null)
           return Retorno<DetalhesModel>.Erro("Hotel não encontrado.");

@@ -21,10 +21,10 @@ namespace Turify.Controllers
     }
 
     [Authorize]
-    [HttpPost("{hotelId}/fotos")]
-    public async Task<IActionResult> PostFotos([FromForm] List<IFormFile> files, [FromQuery(Name = "quartoId")]string? quartoId, string hotelId)
+    [HttpPost("{HotelId}/fotos")]
+    public async Task<IActionResult> PostFotos([FromForm] List<IFormFile> files, [FromQuery(Name = "quartoId")]string? quartoId, string HotelId)
     {
-      var retorno = await _facade.PostFotosHotelAsync(files, hotelId, quartoId);
+      var retorno = await _facade.PostFotosHotelAsync(files, HotelId, quartoId);
 
       if (retorno == null)
         return BadRequest();
@@ -45,10 +45,10 @@ namespace Turify.Controllers
     }
 
     [AllowAnonymous]
-    [HttpGet("{hotelId}")]
-    public async Task<IActionResult> GetAllHotelPhotos(string hotelId)
+    [HttpGet("{HotelId}")]
+    public async Task<IActionResult> GetAllHotelPhotos(string HotelId)
     {
-      var retorno = await _facade.GetAllHotelPhotosAsync(hotelId);
+      var retorno = await _facade.GetAllHotelPhotosAsync(HotelId);
 
       if (retorno == null)
         return BadRequest();

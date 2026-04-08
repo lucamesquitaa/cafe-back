@@ -31,11 +31,11 @@ namespace Turify.Filters
 
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
-      // Accepts both {hotelId} and {id} route param names
-      var hotelIdStr = context.RouteData.Values.GetValueOrDefault("hotelId")?.ToString()
+      // Accepts both {HotelId} and {id} route param names
+      var HotelIdStr = context.RouteData.Values.GetValueOrDefault("HotelId")?.ToString()
                     ?? context.RouteData.Values.GetValueOrDefault("id")?.ToString();
 
-      if (!Guid.TryParse(hotelIdStr, out var hotelId))
+      if (!Guid.TryParse(HotelIdStr, out var HotelId))
       {
         context.Result = new ObjectResult(Retorno.Erro("hotel_id inválido.")) { StatusCode = 403 };
         return;
@@ -56,8 +56,8 @@ namespace Turify.Filters
       }
 
       bool hasPerm = _adminOnly
-          ? await _utilsFacade.IsAdminOnly(user.Id, hotelId)
-          : await _utilsFacade.IsAdminOrManager(user.Id, hotelId);
+          ? await _utilsFacade.IsAdminOnly(user.Id, HotelId)
+          : await _utilsFacade.IsAdminOrManager(user.Id, HotelId);
 
       if (!hasPerm)
       {

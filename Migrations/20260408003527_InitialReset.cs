@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Turify.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialReset : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -60,6 +60,7 @@ namespace Turify.Migrations
                     Swimming = table.Column<bool>(type: "boolean", nullable: true),
                     Cleaning = table.Column<bool>(type: "boolean", nullable: true),
                     Gym = table.Column<bool>(type: "boolean", nullable: true),
+                    DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     Cnpj = table.Column<string>(type: "text", nullable: false),
                     Razao = table.Column<string>(type: "text", nullable: false),
                     NomeRep = table.Column<string>(type: "text", nullable: false),
@@ -94,16 +95,22 @@ namespace Turify.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    DetalhesModelId = table.Column<Guid>(type: "uuid", nullable: false),
+                    HotelId = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
-                    Number = table.Column<int>(type: "integer", nullable: true)
+                    Number = table.Column<int>(type: "integer", nullable: true),
+                    MinHospedes = table.Column<int>(type: "integer", nullable: true),
+                    MaxHospedes = table.Column<int>(type: "integer", nullable: true),
+                    AceitaCamaExtra = table.Column<bool>(type: "boolean", nullable: false),
+                    AceitaBerco = table.Column<bool>(type: "boolean", nullable: false),
+                    Descricao = table.Column<string>(type: "text", nullable: true),
+                    DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_CategoryQuarto", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_CategoryQuarto_Hotel_DetalhesModelId",
-                        column: x => x.DetalhesModelId,
+                        name: "FK_CategoryQuarto_Hotel_HotelId",
+                        column: x => x.HotelId,
                         principalTable: "Hotel",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -114,11 +121,11 @@ namespace Turify.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    DetalhesModelId = table.Column<Guid>(type: "uuid", nullable: false),
+                    HotelId = table.Column<Guid>(type: "uuid", nullable: false),
                     DetalhesId = table.Column<Guid>(type: "uuid", nullable: true),
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     Contact = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    DetalhesModelId1 = table.Column<Guid>(type: "uuid", nullable: false)
+                    DetalhesModelId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -129,8 +136,8 @@ namespace Turify.Migrations
                         principalTable: "Hotel",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_Contacts_Hotel_DetalhesModelId",
-                        column: x => x.DetalhesModelId,
+                        name: "FK_Contacts_Hotel_HotelId",
+                        column: x => x.HotelId,
                         principalTable: "Hotel",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -141,13 +148,13 @@ namespace Turify.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    DetalhesModelId = table.Column<Guid>(type: "uuid", nullable: false),
+                    HotelId = table.Column<Guid>(type: "uuid", nullable: false),
                     Numero = table.Column<int>(type: "integer", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
-                    Description = table.Column<string>(type: "text", nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: true),
                     MaxOcupation = table.Column<int>(type: "integer", nullable: false),
                     Refund = table.Column<bool>(type: "boolean", nullable: true),
-                    AreaSize = table.Column<string>(type: "text", nullable: false),
+                    AreaSize = table.Column<string>(type: "text", nullable: true),
                     Diff = table.Column<string>(type: "text", nullable: true),
                     Freeze = table.Column<bool>(type: "boolean", nullable: true),
                     Vault = table.Column<bool>(type: "boolean", nullable: true),
@@ -160,14 +167,15 @@ namespace Turify.Migrations
                     Bathroom = table.Column<bool>(type: "boolean", nullable: true),
                     BathProducts = table.Column<string>(type: "text", nullable: true),
                     Tv = table.Column<bool>(type: "boolean", nullable: true),
-                    TypeTv = table.Column<string>(type: "text", nullable: true)
+                    TypeTv = table.Column<string>(type: "text", nullable: true),
+                    DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Quartos", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Quartos_Hotel_DetalhesModelId",
-                        column: x => x.DetalhesModelId,
+                        name: "FK_Quartos_Hotel_HotelId",
+                        column: x => x.HotelId,
                         principalTable: "Hotel",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -181,10 +189,10 @@ namespace Turify.Migrations
                     UserModelId = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: true),
                     UserModelEmail = table.Column<string>(type: "text", nullable: false),
-                    DetalhesModelId = table.Column<Guid>(type: "uuid", nullable: false),
+                    HotelId = table.Column<Guid>(type: "uuid", nullable: false),
                     DetalhesId = table.Column<Guid>(type: "uuid", nullable: true),
                     Role = table.Column<string>(type: "text", nullable: false),
-                    DetalhesModelId1 = table.Column<Guid>(type: "uuid", nullable: false),
+                    DetalhesModelId = table.Column<Guid>(type: "uuid", nullable: false),
                     UserModelId1 = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
@@ -196,8 +204,8 @@ namespace Turify.Migrations
                         principalTable: "Hotel",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_UsuarioPermissao_Hotel_DetalhesModelId",
-                        column: x => x.DetalhesModelId,
+                        name: "FK_UsuarioPermissao_Hotel_HotelId",
+                        column: x => x.HotelId,
                         principalTable: "Hotel",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -222,11 +230,17 @@ namespace Turify.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     BedType = table.Column<int>(type: "integer", nullable: false),
                     Quantity = table.Column<int>(type: "integer", nullable: false),
+                    CategoryQuartoId = table.Column<Guid>(type: "uuid", nullable: true),
                     QuartosModelId = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_BedsDTO", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_BedsDTO_CategoryQuarto_CategoryQuartoId",
+                        column: x => x.CategoryQuartoId,
+                        principalTable: "CategoryQuarto",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_BedsDTO_Quartos_QuartosModelId",
                         column: x => x.QuartosModelId,
@@ -239,7 +253,7 @@ namespace Turify.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    DetalhesModelId = table.Column<Guid>(type: "uuid", nullable: true),
+                    HotelId = table.Column<Guid>(type: "uuid", nullable: true),
                     DetalhesId = table.Column<Guid>(type: "uuid", nullable: true),
                     QuartosModelId = table.Column<Guid>(type: "uuid", nullable: true),
                     QuartosId = table.Column<Guid>(type: "uuid", nullable: true),
@@ -256,8 +270,8 @@ namespace Turify.Migrations
                         principalTable: "Hotel",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_Photos_Hotel_DetalhesModelId",
-                        column: x => x.DetalhesModelId,
+                        name: "FK_Photos_Hotel_HotelId",
+                        column: x => x.HotelId,
                         principalTable: "Hotel",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -349,7 +363,8 @@ namespace Turify.Migrations
                     Kids = table.Column<int>(type: "integer", nullable: false),
                     Cupom = table.Column<string>(type: "text", nullable: true),
                     PriceTotal = table.Column<double>(type: "double precision", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CancelledAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -400,14 +415,19 @@ namespace Turify.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_BedsDTO_CategoryQuartoId",
+                table: "BedsDTO",
+                column: "CategoryQuartoId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_BedsDTO_QuartosModelId",
                 table: "BedsDTO",
                 column: "QuartosModelId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CategoryQuarto_DetalhesModelId",
+                name: "IX_CategoryQuarto_HotelId",
                 table: "CategoryQuarto",
-                column: "DetalhesModelId");
+                column: "HotelId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Contacts_DetalhesId",
@@ -415,9 +435,9 @@ namespace Turify.Migrations
                 column: "DetalhesId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Contacts_DetalhesModelId",
+                name: "IX_Contacts_HotelId",
                 table: "Contacts",
-                column: "DetalhesModelId");
+                column: "HotelId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Hospedes_ReservationId",
@@ -430,9 +450,9 @@ namespace Turify.Migrations
                 column: "DetalhesId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Photos_DetalhesModelId",
+                name: "IX_Photos_HotelId",
                 table: "Photos",
-                column: "DetalhesModelId");
+                column: "HotelId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Photos_QuartosId",
@@ -470,9 +490,9 @@ namespace Turify.Migrations
                 column: "QuartosModelId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Quartos_DetalhesModelId",
+                name: "IX_Quartos_HotelId",
                 table: "Quartos",
-                column: "DetalhesModelId");
+                column: "HotelId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UsuarioPermissao_DetalhesId",
@@ -480,9 +500,9 @@ namespace Turify.Migrations
                 column: "DetalhesId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_UsuarioPermissao_DetalhesModelId",
+                name: "IX_UsuarioPermissao_HotelId",
                 table: "UsuarioPermissao",
-                column: "DetalhesModelId");
+                column: "HotelId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UsuarioPermissao_UserId",

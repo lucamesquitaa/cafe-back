@@ -69,7 +69,7 @@ namespace Turify.Facades
       }
     }
 
-    public async Task<IRetorno<IEnumerable<GetAllManagers>>> GetAllPermissionUsers(string hotelId)
+    public async Task<IRetorno<IEnumerable<GetAllManagers>>> GetAllPermissionUsers(string HotelId)
     {
       try
       {
@@ -83,20 +83,20 @@ namespace Turify.Facades
         if (user == null || user.Id == Guid.Empty)
           return Retorno<IEnumerable<GetAllManagers>>.Erro("Erro ao buscar usuário.");
 
-        var hotelIdGuid = Guid.Parse(hotelId);
+        var HotelIdGuid = Guid.Parse(HotelId);
 
-        var hotel = await _context.Hotel.FirstOrDefaultAsync(u => u.Id == hotelIdGuid);
+        var hotel = await _context.Hotel.FirstOrDefaultAsync(u => u.Id == HotelIdGuid);
 
         if (hotel == null)
           return Retorno<IEnumerable<GetAllManagers>>.Erro("Erro ao buscar hotel.");
 
-        var userIsAdmin = await _utilsFacade.IsAdminOrManager(user.Id, hotelIdGuid);
+        var userIsAdmin = await _utilsFacade.IsAdminOrManager(user.Id, HotelIdGuid);
 
         if (!userIsAdmin)
           return Retorno<IEnumerable<GetAllManagers>>.Erro("Usuário não possui permissão para acessar esta informação.");
 
         var usersLinkedHoteis = await _context.UsuarioPermissao
-          .Where(u => u.HotelId == hotelIdGuid)
+          .Where(u => u.HotelId == HotelIdGuid)
           .Select(x => new GetAllManagers { Email = x.UserModelEmail, Role = x.Role })
           .ToListAsync();
 
@@ -104,11 +104,11 @@ namespace Turify.Facades
       }
       catch (Exception e)
       {
-        throw new Exception("Erro ao processar a solicitação. id: " + hotelId);
+        throw new Exception("Erro ao processar a solicitação. id: " + HotelId);
       }
     }
 
-    public async Task<IRetorno> UpdatePermissionUsers(string hotelId, string email)
+    public async Task<IRetorno> UpdatePermissionUsers(string HotelId, string email)
     {
       try
       {
@@ -122,14 +122,14 @@ namespace Turify.Facades
         if (user == null || user.Id == Guid.Empty)
           return Retorno.Erro("Usuário não encontrado.");
 
-        var hotelIdGuid = Guid.Parse(hotelId);
+        var HotelIdGuid = Guid.Parse(HotelId);
 
-        var hotel = await _context.Hotel.FirstOrDefaultAsync(u => u.Id == hotelIdGuid);
+        var hotel = await _context.Hotel.FirstOrDefaultAsync(u => u.Id == HotelIdGuid);
 
         if (hotel == null)
           return Retorno.Erro("Hotel não encontrado.");
 
-        var userIsAdmin = await _utilsFacade.IsAdminOnly(user.Id, hotelIdGuid);
+        var userIsAdmin = await _utilsFacade.IsAdminOnly(user.Id, HotelIdGuid);
 
         if (!userIsAdmin)
           return Retorno.Erro("Permissão do usuário não é admin deste hotel.");
@@ -139,7 +139,7 @@ namespace Turify.Facades
         if (userManager == null)
           return Retorno.Erro($"Usuário {email} não encontrado.");
 
-        var isUserManagerAlready = await _utilsFacade.IsAdminOrManager(userManager.Id, hotelIdGuid);
+        var isUserManagerAlready = await _utilsFacade.IsAdminOrManager(userManager.Id, HotelIdGuid);
 
         if (isUserManagerAlready)
           return Retorno.Erro($"Usuário {email} já possui permissão de manager neste hotel.");
@@ -151,7 +151,7 @@ namespace Turify.Facades
           var permissions = new UsuarioPermissoes
           {
             Id = Guid.NewGuid(),
-            HotelId = Guid.Parse(hotelId),
+            HotelId = Guid.Parse(HotelId),
             UserModelEmail = email,
             UserModelId = userManager.Id,
             Role = newRole
@@ -164,11 +164,11 @@ namespace Turify.Facades
       }
       catch (Exception e)
       {
-        throw new Exception("Erro ao processar a solicitação. id: " + hotelId + "obj: " + email);
+        throw new Exception("Erro ao processar a solicitação. id: " + HotelId + "obj: " + email);
       }
     }
 
-    public async Task<IRetorno> RemovePermissionUsers(string hotelId, string email)
+    public async Task<IRetorno> RemovePermissionUsers(string HotelId, string email)
     {
       try
       {
@@ -182,14 +182,14 @@ namespace Turify.Facades
         if (user == null || user.Id == Guid.Empty)
           return Retorno.Erro("Usuário não encontrado.");
 
-        var hotelIdGuid = Guid.Parse(hotelId);
+        var HotelIdGuid = Guid.Parse(HotelId);
 
-        var hotel = await _context.Hotel.FirstOrDefaultAsync(u => u.Id == hotelIdGuid);
+        var hotel = await _context.Hotel.FirstOrDefaultAsync(u => u.Id == HotelIdGuid);
 
         if (hotel == null)
           return Retorno.Erro("Hotel não encontrado.");
 
-        var userIsAdmin = await _utilsFacade.IsAdminOnly(user.Id, hotelIdGuid);
+        var userIsAdmin = await _utilsFacade.IsAdminOnly(user.Id, HotelIdGuid);
 
         if (!userIsAdmin)
           return Retorno.Erro("Permissão do usuário não é admin deste hotel.");
@@ -200,7 +200,7 @@ namespace Turify.Facades
           return Retorno.Erro($"Usuário {email} não encontrado.");
         
           var permissions = await _context.UsuarioPermissao
-                                          .FirstOrDefaultAsync(u => u.HotelId == hotelIdGuid && u.UserModelId == userManager.Id);
+                                          .FirstOrDefaultAsync(u => u.HotelId == HotelIdGuid && u.UserModelId == userManager.Id);
 
           _context.UsuarioPermissao.Remove(permissions);
           await _context.SaveChangesAsync();
@@ -210,7 +210,7 @@ namespace Turify.Facades
       }
       catch (Exception e)
       {
-        throw new Exception("Erro ao processar a solicitação. id: " + hotelId + "obj: " + email);
+        throw new Exception("Erro ao processar a solicitação. id: " + HotelId + "obj: " + email);
       }
     }
   }

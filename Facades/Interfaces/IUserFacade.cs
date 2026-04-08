@@ -9,8 +9,8 @@ namespace Turify.Facades.Interfaces
   public interface IUserFacade : IRetorno
   {
     public Task<IRetorno<UserModel>> LoginAndRegisterGoogle(UserGoogleDTO userGoogle);
-    public Task<IRetorno<IEnumerable<GetAllManagers>>> GetAllPermissionUsers(string hotelId);
-    public Task<IRetorno> UpdatePermissionUsers(string hotelId, string emails);
+    public Task<IRetorno<IEnumerable<GetAllManagers>>> GetAllPermissionUsers(string HotelId);
+    public Task<IRetorno> UpdatePermissionUsers(string HotelId, string emails);
 
   }
 }

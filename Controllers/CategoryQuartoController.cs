@@ -20,10 +20,10 @@ namespace Turify.Controllers
       _ctQuartoFacade = ctQuartoFacade;
     }
 
-    [HttpGet("{hotelId}")]
-    public async Task<IActionResult> Get(string hotelId)
+    [HttpGet("{HotelId}")]
+    public async Task<IActionResult> Get(string HotelId)
     {
-      var result = await _ctQuartoFacade.GetAllCategoryQuartos(hotelId);
+      var result = await _ctQuartoFacade.GetAllCategoryQuartos(HotelId);
 
       if (result.Sucesso == false)
         return BadRequest(result);
@@ -50,10 +50,10 @@ namespace Turify.Controllers
     }
 
     // POST: CategoryQuartoController/Edit/5
-    [HttpPost("PostCategoryQuarto/{hotelId}")]
-    public async Task<IActionResult> PostQuartos([FromBody] CriarCategoryQuartoDTO obj, string hotelId)
+    [HttpPost("PostCategoryQuarto/{HotelId}")]
+    public async Task<IActionResult> PostQuartos([FromBody] CriarCategoryQuartoDTO obj, string HotelId)
     {
-      var result = await _ctQuartoFacade.PostCategoryQuartos(obj, hotelId);
+      var result = await _ctQuartoFacade.PostCategoryQuartos(obj, HotelId);
 
       if (result.Sucesso == false)
         return BadRequest(result);

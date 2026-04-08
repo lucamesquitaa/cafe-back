@@ -28,10 +28,10 @@ namespace Turify.Controllers
     }
 
     [AllowAnonymous]
-    [HttpGet("GetAllQuartos/{hotelId}")]
-    public async Task<IActionResult> GetAllQuartos(string hotelId)
+    [HttpGet("GetAllQuartos/{HotelId}")]
+    public async Task<IActionResult> GetAllQuartos(string HotelId)
     {
-       var result = await _quartosFacade.GetAllQuartos(hotelId);
+       var result = await _quartosFacade.GetAllQuartos(HotelId);
 
       if (result.Sucesso == false)
         return BadRequest(result);
@@ -53,10 +53,10 @@ namespace Turify.Controllers
 
     [Authorize]
     [ValidateHotelAccess]
-    [HttpPost("PostPutQuartos/{hotelId}")]
-    public async Task<IActionResult> PostQuartos([FromBody] QuartosModel obj, string hotelId)
+    [HttpPost("PostPutQuartos/{HotelId}")]
+    public async Task<IActionResult> PostQuartos([FromBody] QuartosModel obj, string HotelId)
     {
-      var result = await _quartosFacade.PostQuartosFacade(obj, hotelId);
+      var result = await _quartosFacade.PostQuartosFacade(obj, HotelId);
 
       if (result.Sucesso == false)
         return BadRequest(result);
@@ -66,10 +66,10 @@ namespace Turify.Controllers
 
     [Authorize]
     [ValidateHotelAccess]
-    [HttpPost("PostQuartosMassa/{hotelId}")]
-    public async Task<IActionResult> PostQuartosMassa([FromBody] CriarQuartosMassaDTO dto, string hotelId)
+    [HttpPost("PostQuartosMassa/{HotelId}")]
+    public async Task<IActionResult> PostQuartosMassa([FromBody] CriarQuartosMassaDTO dto, string HotelId)
     {
-      var result = await _quartosFacade.PostQuartosMassa(hotelId, dto);
+      var result = await _quartosFacade.PostQuartosMassa(HotelId, dto);
 
       if (result.Sucesso == false)
         return BadRequest(result);
@@ -79,10 +79,10 @@ namespace Turify.Controllers
 
     [Authorize]
     [ValidateHotelAccess(adminOnly: true)]
-    [HttpDelete("DeleteQuarto/{hotelId}/{quartoId}")]
-    public async Task<IActionResult> DeleteQuartos(string hotelId, string quartoId)
+    [HttpDelete("DeleteQuarto/{HotelId}/{quartoId}")]
+    public async Task<IActionResult> DeleteQuartos(string HotelId, string quartoId)
     {
-      var result = await _quartosFacade.DeleteQuartosFacade(hotelId, quartoId);
+      var result = await _quartosFacade.DeleteQuartosFacade(HotelId, quartoId);
 
       if (result.Sucesso == false)
         return BadRequest(result);

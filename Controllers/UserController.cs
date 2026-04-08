@@ -46,7 +46,7 @@ namespace Turify.Controllers
     }
 
     [HttpPost("GetAllPermissionUsers")]
-    public async Task<IActionResult> GetAllPermissionUsers([FromBody] hotelIdObj obj)
+    public async Task<IActionResult> GetAllPermissionUsers([FromBody] HotelIdObj obj)
     {
        var result = await _userFacade.GetAllPermissionUsers(obj.HotelId);
 
