@@ -43,10 +43,10 @@ namespace Turify.Controllers
 
     // GET: api/<ValuesController>
     [AllowAnonymous]
-    [HttpGet("{hotelId}")]
-    public async Task<IActionResult> Get(string hotelId)
+    [HttpGet("{HotelId}")]
+    public async Task<IActionResult> Get(string HotelId)
     {
-      var retorno = await _hotelFacade.GetDetalhesFacade(hotelId);
+      var retorno = await _hotelFacade.GetDetalhesFacade(HotelId);
 
       if (retorno.Sucesso == false)
         return BadRequest(retorno);
@@ -57,10 +57,10 @@ namespace Turify.Controllers
     // GET: api/<ValuesController>
     [Authorize]
     [ValidateHotelAccess]
-    [HttpGet("ByManager/{hotelId}")]
-    public async Task<IActionResult> GetByManager(string hotelId)
+    [HttpGet("ByManager/{HotelId}")]
+    public async Task<IActionResult> GetByManager(string HotelId)
     {
-      var retorno = await _hotelFacade.GetDetalhesFacadeByManager(hotelId);
+      var retorno = await _hotelFacade.GetDetalhesFacadeByManager(HotelId);
 
       if (retorno.Sucesso == false)
         return BadRequest(retorno);
@@ -97,10 +97,10 @@ namespace Turify.Controllers
     // PUT api/<ValuesController>
     [Authorize]
     [ValidateHotelAccess]
-    [HttpPut("{hotelId}")]
-    public async Task<IActionResult> Put([FromBody] DetalhesModel obj, string hotelId)
+    [HttpPut("{HotelId}")]
+    public async Task<IActionResult> Put([FromBody] DetalhesModel obj, string HotelId)
     {
-      var retorno = await _hotelFacade.PutDetalhesFacade(obj, hotelId);
+      var retorno = await _hotelFacade.PutDetalhesFacade(obj, HotelId);
 
       if (retorno.Sucesso == false)
         return BadRequest(retorno);
@@ -110,13 +110,13 @@ namespace Turify.Controllers
 
     [Authorize]
     [ValidateHotelAccess]
-    [HttpPost("{hotelId}/fotos")]
-    public async Task<IActionResult> PostFotos(IFormFile file, string hotelId)
+    [HttpPost("{HotelId}/fotos")]
+    public async Task<IActionResult> PostFotos(IFormFile file, string HotelId)
     {
       if (file == null || file.Length == 0)
         return BadRequest("Arquivo inválido.");
 
-      var retorno = await _hotelFacade.GetDetalhesFacade(hotelId);
+      var retorno = await _hotelFacade.GetDetalhesFacade(HotelId);
 
       if (retorno.Sucesso == false)
         return BadRequest(retorno);   

@@ -35,7 +35,7 @@ namespace Turify.Facades
     public string? ExcecaoMensagem { get; private set; }
     public object? Data { get; private set; }
 
-    public async Task<IRetorno> PostFotosHotelAsync([FromForm] List<IFormFile> files, string hotelId, string? quartoId)
+    public async Task<IRetorno> PostFotosHotelAsync([FromForm] List<IFormFile> files, string HotelId, string? quartoId)
     {
       try
       {
@@ -55,7 +55,7 @@ namespace Turify.Facades
         if (user == null || user.Id == Guid.Empty)
           return Retorno.Erro("Usuário não encontrado - id.");
 
-        Guid hotelGuid = new Guid(hotelId);
+        Guid hotelGuid = new Guid(HotelId);
 
         var hotelName = await _context.Hotel.FirstOrDefaultAsync(u => u.Id == hotelGuid);
         if (hotelName == null || string.IsNullOrEmpty(hotelName?.Name))
@@ -193,11 +193,11 @@ namespace Turify.Facades
       }
     }
 
-    public async Task<IRetorno<IEnumerable<GetAllPhotos>>> GetAllHotelPhotosAsync(string hotelId)
+    public async Task<IRetorno<IEnumerable<GetAllPhotos>>> GetAllHotelPhotosAsync(string HotelId)
     {
       try
       {
-        Guid hotelGuid = new Guid(hotelId);
+        Guid hotelGuid = new Guid(HotelId);
 
         var hotel = await _context.Hotel.FirstOrDefaultAsync(u => u.Id == hotelGuid);
 

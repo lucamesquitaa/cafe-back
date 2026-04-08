@@ -30,11 +30,11 @@ namespace Turify.Facades
     public string? ExcecaoMensagem { get; private set; }
     public object? Data { get; private set; }
 
-    public async Task<IRetorno<IEnumerable<QuartosModel>>> GetAllQuartos(string hotelId)
+    public async Task<IRetorno<IEnumerable<QuartosModel>>> GetAllQuartos(string HotelId)
     {
       try
       {
-        var hotelGuid = Guid.Parse(hotelId);
+        var hotelGuid = Guid.Parse(HotelId);
 
         var quartos = await _context.Quartos.Where(u => u.HotelId == hotelGuid)
                                             .Include(q => q.Category)
@@ -47,7 +47,7 @@ namespace Turify.Facades
       }
       catch (Exception e)
       {
-        throw new Exception("Erro ao processar a solicitação. id: " + hotelId);
+        throw new Exception("Erro ao processar a solicitação. id: " + HotelId);
       }
     }
 
@@ -74,11 +74,11 @@ namespace Turify.Facades
       }
     }
 
-    public async Task<IRetorno<QuartosModel>> PostQuartosFacade(QuartosModel quartos, string hotelId)
+    public async Task<IRetorno<QuartosModel>> PostQuartosFacade(QuartosModel quartos, string HotelId)
     {
       try
       {
-        var hotelGuid = Guid.Parse(hotelId);
+        var hotelGuid = Guid.Parse(HotelId);
 
         var quartoExistente = await _context.Quartos
                                             .Include(q => q.Category)
@@ -130,7 +130,7 @@ namespace Turify.Facades
           return Retorno<QuartosModel>.Ok(quartoExistente);
         }
 
-        // INSERT
+        // HotelId 
         quartos.HotelId = hotelGuid;
 
         if (resolvedCats.Any())
@@ -143,15 +143,15 @@ namespace Turify.Facades
       }
       catch (Exception e)
       {
-        throw new Exception("Erro ao processar a solicitação. id: " + hotelId + "obj: " + JsonSerializer.Serialize(quartos));
+        throw new Exception("Erro ao processar a solicitação. id: " + HotelId + "obj: " + JsonSerializer.Serialize(quartos));
       }
     }
 
-    public async Task<IRetorno<QuartosMassaResultDTO>> PostQuartosMassa(string hotelId, CriarQuartosMassaDTO dto)
+    public async Task<IRetorno<QuartosMassaResultDTO>> PostQuartosMassa(string HotelId, CriarQuartosMassaDTO dto)
     {
       try
       {
-        var hotelGuid = Guid.Parse(hotelId);
+        var hotelGuid = Guid.Parse(HotelId);
 
         // Validar se TipoQuartoId pertence ao hotel
         var tipoQuarto = await _context.CategoryQuarto
@@ -222,11 +222,11 @@ namespace Turify.Facades
       }
       catch (Exception e)
       {
-        throw new Exception("Erro ao processar a solicitação. hotelId: " + hotelId + " detalhe: " + e.Message);
+        throw new Exception("Erro ao processar a solicitação. HotelId: " + HotelId + " detalhe: " + e.Message);
       }
     }
 
-    public async Task<IRetorno> DeleteQuartosFacade(string hotelId, string quartoId)
+    public async Task<IRetorno> DeleteQuartosFacade(string HotelId, string quartoId)
     {
       try
       {
@@ -265,7 +265,7 @@ namespace Turify.Facades
 
         return Retorno.Ok("Quarto deletado com sucesso.");
       } catch (Exception e) {
-        throw new Exception("Erro ao processar a solicitação. id: " + hotelId + " quarto id : " + quartoId);
+        throw new Exception("Erro ao processar a solicitação. id: " + HotelId + " quarto id : " + quartoId);
       }
     }
   }

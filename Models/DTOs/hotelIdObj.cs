@@ -1,6 +1,6 @@
 ﻿namespace Turify.Models.DTOs
 {
-  public class hotelIdObj
+  public class HotelIdObj
   {
     public string HotelId { get; set; }
   }

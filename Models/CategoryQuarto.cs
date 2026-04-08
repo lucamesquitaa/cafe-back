@@ -9,7 +9,7 @@ namespace Turify.Models
     [Key]
     public Guid Id { get; set; } = Guid.NewGuid();
 
-    [Column("DetalhesModelId")]
+    [Column("HotelId")]
     public Guid HotelId { get; set; }
     [ForeignKey(nameof(HotelId))]
     public DetalhesModel? Detalhes { get; set; }

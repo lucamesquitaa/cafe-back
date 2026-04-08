@@ -57,7 +57,7 @@ namespace Turify.Migrations
 
                     b.Property<Guid>("HotelId")
                         .HasColumnType("uuid")
-                        .HasColumnName("DetalhesModelId");
+                        .HasColumnName("HotelId");
 
                     b.Property<int?>("MaxHospedes")
                         .HasColumnType("integer");
@@ -98,7 +98,7 @@ namespace Turify.Migrations
 
                     b.Property<Guid>("HotelId")
                         .HasColumnType("uuid")
-                        .HasColumnName("DetalhesModelId");
+                        .HasColumnName("HotelId");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -111,11 +111,7 @@ namespace Turify.Migrations
 
                     b.HasIndex("HotelId");
 
-                    b.ToTable("Contacts", t =>
-                        {
-                            t.Property("DetalhesModelId")
-                                .HasColumnName("DetalhesModelId1");
-                        });
+                    b.ToTable("Contacts");
                 });
 
             modelBuilder.Entity("Turify.Models.DTOs.BedsDTO", b =>
@@ -317,7 +313,7 @@ namespace Turify.Migrations
 
                     b.Property<Guid?>("HotelId")
                         .HasColumnType("uuid")
-                        .HasColumnName("DetalhesModelId");
+                        .HasColumnName("HotelId");
 
                     b.Property<Guid?>("QuartosId")
                         .HasColumnType("uuid");
@@ -563,7 +559,7 @@ namespace Turify.Migrations
 
                     b.Property<Guid>("HotelId")
                         .HasColumnType("uuid")
-                        .HasColumnName("DetalhesModelId");
+                        .HasColumnName("HotelId");
 
                     b.Property<int>("MaxOcupation")
                         .HasColumnType("integer");
@@ -648,7 +644,7 @@ namespace Turify.Migrations
 
                     b.Property<Guid>("HotelId")
                         .HasColumnType("uuid")
-                        .HasColumnName("DetalhesModelId");
+                        .HasColumnName("HotelId");
 
                     b.Property<string>("Role")
                         .IsRequired()
@@ -677,11 +673,7 @@ namespace Turify.Migrations
 
                     b.HasIndex("UserModelId");
 
-                    b.ToTable("UsuarioPermissao", t =>
-                        {
-                            t.Property("DetalhesModelId")
-                                .HasColumnName("DetalhesModelId1");
-                        });
+                    b.ToTable("UsuarioPermissao");
                 });
 
             modelBuilder.Entity("QuartoCategory", b =>
