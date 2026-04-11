@@ -188,6 +188,7 @@ namespace Turify.Facades
           Id = Guid.NewGuid(),
           HotelId = novoId,
           UserModelId = user.Id,
+          UserModelEmail = user.Email,
           Role = RoleUserModel.Admin
         };
 
