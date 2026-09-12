@@ -46,9 +46,9 @@ namespace Turify.Controllers
     }
 
     [HttpPost("GetAllPermissionUsers")]
-    public async Task<IActionResult> GetAllPermissionUsers([FromBody] HotelIdObj obj)
+    public async Task<IActionResult> GetAllPermissionUsers([FromBody] CafeteriaIdObj obj)
     {
-       var result = await _userFacade.GetAllPermissionUsers(obj.HotelId);
+       var result = await _userFacade.GetAllPermissionUsers(obj.CafeteriaId);
 
       if (result.Sucesso == false)
         return BadRequest(result);
@@ -59,7 +59,7 @@ namespace Turify.Controllers
     [HttpPost("UpdateManager")]
     public async Task<IActionResult> UpdateManager([FromBody] ObjSetManager obj)
     {
-      var result = await _userFacade.UpdatePermissionUsers(obj.HotelId, obj.Email);
+      var result = await _userFacade.UpdatePermissionUsers(obj.CafeteriaId, obj.Email);
 
       if(result.Sucesso == false)
         return BadRequest(result);
@@ -70,7 +70,7 @@ namespace Turify.Controllers
     [HttpDelete("RemovePermissionUsers")]
     public async Task<IActionResult> RemovePermissionUsers([FromBody] ObjSetManager obj)
     {
-      var result = await _userFacade.RemovePermissionUsers(obj.HotelId, obj.Email);
+      var result = await _userFacade.RemovePermissionUsers(obj.CafeteriaId, obj.Email);
 
       if (result.Sucesso == false)
         return BadRequest(result);

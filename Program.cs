@@ -1,5 +1,3 @@
-using Google.Api;
-using Google.Cloud.SecretManager.V1;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,20 +35,8 @@ builder.Services.AddHttpContextAccessor();
 
 // Serviços
 builder.Services.AddTransient<UserFacade>();
-builder.Services.AddTransient<HotelFacade>();
-builder.Services.AddTransient<QuartosFacade>();
-builder.Services.AddTransient<CategoryQuartosFacade>();
+builder.Services.AddTransient<CafeteriaFacade>();
 builder.Services.AddTransient<UtilsFacade>();
-builder.Services.AddTransient<PhotosFacade>();
-builder.Services.AddTransient<MotorDeReservasFacade>();
-
-// Registrar o Producer como singleton ou scoped
-builder.Services.AddSingleton<IRabbitMqProducer>(sp =>
- new RabbitMQProducer(
- builder.Configuration["RabbitMQ:HostName"],
- builder.Configuration["RabbitMQ:QueueName"]
-));
-builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<GoogleAuthService>();
 var connectionString = builder.Configuration.GetConnectionString("Default")
     ?? Environment.GetEnvironmentVariable("CONNECTION_STRING")
@@ -124,7 +110,7 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(c =>
 {
- c.SwaggerDoc("v1", new OpenApiInfo { Title = "Hotelaria API", Version = "v2" });
+ c.SwaggerDoc("v1", new OpenApiInfo { Title = "Cafeterias API", Version = "v1" });
 
  c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
  {
@@ -197,7 +183,7 @@ app.UseCors("AllowAngular");
 app.UseSwagger();
  app.UseSwaggerUI(c =>
  {
- c.SwaggerEndpoint("/swagger/v1/swagger.json", "Hotelaria API v2");
+ c.SwaggerEndpoint("/swagger/v1/swagger.json", "Cafeterias API v1");
  });
 
 app.UseAuthentication();

@@ -11,7 +11,7 @@ namespace Turify.Data
             
             // Use a temporary connection string for migrations
             // This is only used at design-time when running migrations
-            optionsBuilder.UseNpgsql("Host=localhost;Database=hotelariadb;Username=lucam;Password=X(y4M&.}@Mes6TZJ");
+            optionsBuilder.UseNpgsql("Host=localhost;Database=cafeteriasdb;Username=lucam;Password=X(y4M&.}@Mes6TZJ");
             
             return new Context(optionsBuilder.Options);
         }

@@ -1,8 +1,7 @@
 namespace Turify.Models.DTOs
 {
-  public class ObjSetManager
+  public class CafeteriaIdObj
   {
-    public string Email { get; set; } = string.Empty;
     public string CafeteriaId { get; set; } = string.Empty;
   }
 }

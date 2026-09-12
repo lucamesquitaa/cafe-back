@@ -1,16 +1,14 @@
-﻿
-using Microsoft.AspNetCore.Mvc;
+
 using Turify.Models;
 using Turify.Models.DTOs;
-using System.IdentityModel.Tokens.Jwt;
 
 namespace Turify.Facades.Interfaces
 {
   public interface IUserFacade : IRetorno
   {
     public Task<IRetorno<UserModel>> LoginAndRegisterGoogle(UserGoogleDTO userGoogle);
-    public Task<IRetorno<IEnumerable<GetAllManagers>>> GetAllPermissionUsers(string HotelId);
-    public Task<IRetorno> UpdatePermissionUsers(string HotelId, string emails);
-
+    public Task<IRetorno<IEnumerable<GetAllManagers>>> GetAllPermissionUsers(string CafeteriaId);
+    public Task<IRetorno> UpdatePermissionUsers(string CafeteriaId, string email);
+    public Task<IRetorno> RemovePermissionUsers(string CafeteriaId, string email);
   }
 }
