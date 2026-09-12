@@ -4,13 +4,19 @@ namespace Turify.Models.DTOs
   {
     public Guid Id { get; set; }
     public string Nome { get; set; } = string.Empty;
+    public string Rede { get; set; } = string.Empty;
+    public string Url { get; set; } = string.Empty;
+    public string Descricao { get; set; } = string.Empty;
+    public string Diferencial { get; set; } = string.Empty;
+    public bool Ativo { get; set; }
     public string Endereco { get; set; } = string.Empty;
-    public double Lat { get; set; }
-    public double Lng { get; set; }
-    public double NotaMedia { get; set; }
-    public int QtdAvaliacoes { get; set; }
-    public string? FotoUrl { get; set; }
-    public string? CategoriaPrincipal { get; set; }
+    public string Numero { get; set; } = string.Empty;
+    public string Cep { get; set; } = string.Empty;
+    public string Cidade { get; set; } = string.Empty;
+    public string Estado { get; set; } = string.Empty;
+    public string Complemento { get; set; } = string.Empty;
+    public string? FotoPrincipal { get; set; }
+    public TypeCafeEnum CategoriaPrincipal { get; set; }
     public DateTime CriadoEm { get; set; }
   }
 }

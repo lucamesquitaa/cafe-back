@@ -27,7 +27,7 @@ namespace Turify.Facades
     public string? ExcecaoMensagem { get; private set; }
     public object? Data { get; private set; }
 
-    public async Task<IRetorno<IEnumerable<GetAllCafeterias>>> GetAllFacade(double? lat, double? lng, int page, int pageSize)
+    public async Task<IRetorno<IEnumerable<GetAllCafeterias>>> GetAllFacade(int page, int pageSize)
     {
       try
       {
@@ -36,40 +36,19 @@ namespace Turify.Facades
 
         var cafeterias = await _context.Cafeterias.AsNoTracking().ToListAsync();
 
-        IEnumerable<GetAllCafeterias> resultado;
-
-        if (lat.HasValue && lng.HasValue)
-        {
-          resultado = cafeterias
-            .Select(c => new GetAllCafeterias
-            {
-              Id = c.Id,
-              Nome = c.Nome,
-              Endereco = c.Endereco,
-              FotoUrl = c.FotoUrl,
-              CategoriaPrincipal = c.CategoriaPrincipal,
-              NotaMedia = c.NotaMedia,
-              QtdAvaliacoes = c.QtdAvaliacoes,
-              DistanciaKm = CalcularDistanciaKm(lat.Value, lng.Value, c.Lat, c.Lng)
-            })
-            .OrderBy(c => c.DistanciaKm);
-        }
-        else
-        {
-          resultado = cafeterias
-            .OrderByDescending(c => c.CriadoEm)
-            .Select(c => new GetAllCafeterias
-            {
-              Id = c.Id,
-              Nome = c.Nome,
-              Endereco = c.Endereco,
-              FotoUrl = c.FotoUrl,
-              CategoriaPrincipal = c.CategoriaPrincipal,
-              NotaMedia = c.NotaMedia,
-              QtdAvaliacoes = c.QtdAvaliacoes,
-              DistanciaKm = null
-            });
-        }
+        var resultado = cafeterias
+          .OrderByDescending(c => c.CriadoEm)
+          .Select(c => new GetAllCafeterias
+          {
+            Id = c.Id,
+            Nome = c.Nome,
+            Endereco = c.Endereco,
+            Numero = c.Numero,
+            Complemento = c.Complemento,
+            Cep = c.Cep,
+            FotoPrincipal = c.FotoPrincipal,
+            CategoriaPrincipal = c.CategoriaPrincipal
+          });
 
         var paginado = resultado.Skip((page - 1) * pageSize).Take(pageSize);
 
@@ -94,12 +73,18 @@ namespace Turify.Facades
           {
             Id = c.Id,
             Nome = c.Nome,
+            Rede = c.Rede,
+            Url = c.Url,
+            Descricao = c.Descricao,
+            Diferencial = c.Diferencial,
+            Ativo = c.Ativo,
             Endereco = c.Endereco,
-            Lat = c.Lat,
-            Lng = c.Lng,
-            NotaMedia = c.NotaMedia,
-            QtdAvaliacoes = c.QtdAvaliacoes,
-            FotoUrl = c.FotoUrl,
+            Numero = c.Numero,
+            Cep = c.Cep,
+            Cidade = c.Cidade,
+            Estado = c.Estado,
+            Complemento = c.Complemento,
+            FotoPrincipal = c.FotoPrincipal,
             CategoriaPrincipal = c.CategoriaPrincipal,
             CriadoEm = c.CriadoEm
           })
@@ -136,11 +121,25 @@ namespace Turify.Facades
         {
           Id = novoId,
           Nome = cafeteria.Nome,
+          Rede = cafeteria.Rede,
+          Url = cafeteria.Url,
+          Descricao = cafeteria.Descricao,
+          Diferencial = cafeteria.Diferencial,
           Endereco = cafeteria.Endereco,
-          Lat = cafeteria.Lat,
-          Lng = cafeteria.Lng,
-          CategoriaPrincipal = cafeteria.CategoriaPrincipal,
-          FotoUrl = cafeteria.FotoUrl,
+          Numero = cafeteria.Numero,
+          Cep = cafeteria.Cep,
+          Complemento = cafeteria.Complemento,
+          Cidade = "Belo Horizonte",
+          Estado = "MG",
+          NomeRep = cafeteria.NomeRep,
+          TelRep = cafeteria.TelRep,
+          CpfRep = cafeteria.CpfRep,
+          EmailRep = cafeteria.EmailRep,
+          Cnpj = cafeteria.Cnpj,
+          Razao = cafeteria.Razao,
+          CategoriaPrincipal = TypeCafeEnum.Cafeteria,
+          CriadoEm = DateTime.UtcNow,
+          Ativo = true
         };
 
         var permissao = new UsuarioPermissoes
@@ -160,12 +159,18 @@ namespace Turify.Facades
         {
           Id = novaCafeteria.Id,
           Nome = novaCafeteria.Nome,
+          Rede = novaCafeteria.Rede,
+          Url = novaCafeteria.Url,
+          Descricao = novaCafeteria.Descricao,
+          Diferencial = novaCafeteria.Diferencial,
+          Ativo = novaCafeteria.Ativo,
           Endereco = novaCafeteria.Endereco,
-          Lat = novaCafeteria.Lat,
-          Lng = novaCafeteria.Lng,
-          NotaMedia = novaCafeteria.NotaMedia,
-          QtdAvaliacoes = novaCafeteria.QtdAvaliacoes,
-          FotoUrl = novaCafeteria.FotoUrl,
+          Numero = novaCafeteria.Numero,
+          Cep = novaCafeteria.Cep,
+          Cidade = novaCafeteria.Cidade,
+          Estado = novaCafeteria.Estado,
+          Complemento = novaCafeteria.Complemento,
+          FotoPrincipal = novaCafeteria.FotoPrincipal,
           CategoriaPrincipal = novaCafeteria.CategoriaPrincipal,
           CriadoEm = novaCafeteria.CriadoEm
         }, "Cafeteria criada com sucesso.");
@@ -189,9 +194,19 @@ namespace Turify.Facades
           return Retorno<GetCafeteriaById>.Erro("Cafeteria não encontrada.");
 
         existente.Nome = cafeteria.Nome;
+        existente.Rede = cafeteria.Rede;
+        existente.Url = cafeteria.Url;
+        existente.Descricao = cafeteria.Descricao;
+        existente.Diferencial = cafeteria.Diferencial;
+        existente.Ativo = cafeteria.Ativo;
         existente.Endereco = cafeteria.Endereco;
+        existente.Numero = cafeteria.Numero;
+        existente.Cep = cafeteria.Cep;
+        existente.Cidade = cafeteria.Cidade;
+        existente.Estado = cafeteria.Estado;
+        existente.Complemento = cafeteria.Complemento;
+        existente.FotoPrincipal = cafeteria.FotoPrincipal;
         existente.CategoriaPrincipal = cafeteria.CategoriaPrincipal;
-        existente.FotoUrl = cafeteria.FotoUrl;
 
         await _context.SaveChangesAsync();
 
@@ -199,12 +214,18 @@ namespace Turify.Facades
         {
           Id = existente.Id,
           Nome = existente.Nome,
+          Rede = existente.Rede,
+          Url = existente.Url,
+          Descricao = existente.Descricao,
+          Diferencial = existente.Diferencial,
+          Ativo = existente.Ativo,
           Endereco = existente.Endereco,
-          Lat = existente.Lat,
-          Lng = existente.Lng,
-          NotaMedia = existente.NotaMedia,
-          QtdAvaliacoes = existente.QtdAvaliacoes,
-          FotoUrl = existente.FotoUrl,
+          Numero = existente.Numero,
+          Cep = existente.Cep,
+          Cidade = existente.Cidade,
+          Estado = existente.Estado,
+          Complemento = existente.Complemento,
+          FotoPrincipal = existente.FotoPrincipal,
           CategoriaPrincipal = existente.CategoriaPrincipal,
           CriadoEm = existente.CriadoEm
         }, "Cafeteria atualizada com sucesso.");
@@ -214,23 +235,5 @@ namespace Turify.Facades
         throw new Exception("Erro ao processar a solicitação. id: " + id);
       }
     }
-
-    private static double CalcularDistanciaKm(double lat1, double lng1, double lat2, double lng2)
-    {
-      const double raioTerraKm = 6371;
-
-      var dLat = DegreesToRadians(lat2 - lat1);
-      var dLng = DegreesToRadians(lng2 - lng1);
-
-      var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
-              Math.Cos(DegreesToRadians(lat1)) * Math.Cos(DegreesToRadians(lat2)) *
-              Math.Sin(dLng / 2) * Math.Sin(dLng / 2);
-
-      var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
-
-      return raioTerraKm * c;
-    }
-
-    private static double DegreesToRadians(double degrees) => degrees * Math.PI / 180;
   }
 }
