@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Turify.Models
+namespace Cafeteria.Models
 {
   public class Cafeteria
   {

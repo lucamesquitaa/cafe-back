@@ -3,11 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Turify.Data;
-using Turify.Facades;
-using Turify.Facades.Interfaces;
-using Turify.Filters;
-using Turify.Services;
+using Cafeteria.Data;
+using Cafeteria.Facades;
+using Cafeteria.Facades.Interfaces;
+using Cafeteria.Filters;
+using Cafeteria.Services;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
@@ -26,7 +26,7 @@ builder.Services.AddCors(options =>
 {
  options.AddPolicy("AllowAngular",
  policy => policy
- .WithOrigins("http://localhost:4200", "https://api.turify.com.br")
+ .WithOrigins("http://localhost:4200", "https://api.Cafeteria.com.br")
  .AllowAnyHeader()
  .AllowAnyMethod()
  .AllowCredentials());
@@ -42,7 +42,7 @@ var connectionString = builder.Configuration.GetConnectionString("Default")
     ?? Environment.GetEnvironmentVariable("CONNECTION_STRING")
     ?? throw new InvalidOperationException(
         "Connection string não configurada. Defina ConnectionStrings__Default ou a variável de ambiente CONNECTION_STRING.");
-builder.Services.AddDbContext<Turify.Data.Context>(options =>
+builder.Services.AddDbContext<Cafeteria.Data.Context>(options =>
  options.UseNpgsql(connectionString)
 );
 
@@ -167,7 +167,7 @@ catch (Exception ex)
 app.UseForwardedHeaders();
 using (var scope = app.Services.CreateScope())
 {
- var context = scope.ServiceProvider.GetRequiredService<Turify.Data.Context>();
+ var context = scope.ServiceProvider.GetRequiredService<Cafeteria.Data.Context>();
  context.Database.Migrate();
 }
 app.UseMiddleware<ErrorLoggingMiddleware>();

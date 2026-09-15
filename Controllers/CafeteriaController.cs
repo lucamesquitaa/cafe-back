@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Turify.Facades;
-using Turify.Filters;
-using Turify.Models.DTOs;
+using Cafeteria.Facades;
+using Cafeteria.Filters;
+using Cafeteria.Models.DTOs;
 
-namespace Turify.Controllers
+namespace Cafeteria.Controllers
 {
   [Route("api/[controller]")]
   [ApiController]

@@ -1,4 +1,4 @@
-namespace Turify.Models.DTOs
+namespace Cafeteria.Models.DTOs
 {
   public class CriarCafeteriaDTO
   {

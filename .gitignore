@@ -3,6 +3,9 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# Local Postgres data volume (never commit database files)
+postgres-data/
+
 # User-specific files
 *.rsuser
 *.suo

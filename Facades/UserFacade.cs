@@ -1,13 +1,12 @@
 using Microsoft.EntityFrameworkCore;
-using Turify.Data;
-using Turify.Facades.Interfaces;
-using Turify.Models;
-using Turify.Models.DTOs;
-using Turify.Models.Enums;
-using Turify.Services;
-using System.Text.Json;
+using Cafeteria.Data;
+using Cafeteria.Facades.Interfaces;
+using Cafeteria.Models;
+using Cafeteria.Models.DTOs;
+using Cafeteria.Models.Enums;
+using Cafeteria.Services;
 
-namespace Turify.Facades
+namespace Cafeteria.Facades
 {
   public class UserFacade : IUserFacade, IRetorno
   {
@@ -32,14 +31,25 @@ namespace Turify.Facades
     {
       try
       {
-        if (userGoogle == null)
-          return Retorno<UserModel>.Erro("Token inválido.");
+        if (userGoogle == null || string.IsNullOrWhiteSpace(userGoogle.IdToken))
+          return Retorno<UserModel>.Erro("Token do Google não informado.");
 
-        var googleId = userGoogle.Id;
-        var email = userGoogle.Email;
-        var firstName = userGoogle.FirstName;
-        var lastName = userGoogle.LastName;
-        var picture = userGoogle.Photo;
+        var payload = await _googleAuthService.ValidateIdTokenAsync(userGoogle.IdToken);
+
+        if (payload == null)
+          return Retorno<UserModel>.Erro("Token do Google inválido ou expirado.");
+
+        if (string.IsNullOrWhiteSpace(payload.Email))
+          return Retorno<UserModel>.Erro("Token do Google não contém e-mail.");
+
+        if (!payload.EmailVerified)
+          return Retorno<UserModel>.Erro("E-mail do Google não verificado.");
+
+        var googleId = payload.Subject;
+        var email = payload.Email.Trim().ToLowerInvariant();
+        var firstName = !string.IsNullOrWhiteSpace(payload.GivenName) ? payload.GivenName : payload.Name;
+        var lastName = payload.FamilyName;
+        var picture = payload.Picture;
 
         var user = await _utilsFacade.GetUserByEmail(email);
 
@@ -49,20 +59,28 @@ namespace Turify.Facades
           {
             Id = Guid.NewGuid(),
             GoogleId = googleId,
-            FirstName = firstName,
+            FirstName = firstName ?? string.Empty,
             LastName = lastName,
             Email = email,
             Photo = picture
           };
           _context.Usuarios.Add(user);
-          await _context.SaveChangesAsync();
         }
+        else
+        {
+          user.GoogleId = googleId;
+          user.FirstName = firstName ?? user.FirstName;
+          user.LastName = lastName ?? user.LastName;
+          user.Photo = picture ?? user.Photo;
+        }
+
+        await _context.SaveChangesAsync();
 
         return Retorno<UserModel>.Ok(user, "Login ou registro realizado com sucesso.");
       }
       catch (Exception e)
       {
-        throw new Exception("Erro ao processar a solicitação. obj: " + JsonSerializer.Serialize(userGoogle));
+        throw new Exception("Erro ao processar a solicitação de login com Google.", e);
       }
     }
 

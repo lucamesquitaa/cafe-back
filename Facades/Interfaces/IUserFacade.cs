@@ -1,8 +1,8 @@
 
-using Turify.Models;
-using Turify.Models.DTOs;
+using Cafeteria.Models;
+using Cafeteria.Models.DTOs;
 
-namespace Turify.Facades.Interfaces
+namespace Cafeteria.Facades.Interfaces
 {
   public interface IUserFacade : IRetorno
   {

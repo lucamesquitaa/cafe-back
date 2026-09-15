@@ -1,9 +1,9 @@
-﻿using Turify.Data;
-using Turify.Models;
+﻿using Cafeteria.Data;
+using Cafeteria.Models;
 using System;
 using System.Reflection;
 
-namespace Turify.Facades
+namespace Cafeteria.Facades
 {
   public class ErrorLoggingMiddleware
   {

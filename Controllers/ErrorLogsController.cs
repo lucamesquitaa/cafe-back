@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Turify.Data;
+using Cafeteria.Data;
 using System;
 
-namespace Turify.Controllers
+namespace Cafeteria.Controllers
 {
   [ApiController]
   [Route("api/errors")]

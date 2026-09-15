@@ -1,12 +1,12 @@
 using Microsoft.EntityFrameworkCore;
-using Turify.Data;
-using Turify.Facades.Interfaces;
-using Turify.Models;
-using Turify.Models.DTOs;
-using Turify.Models.Enums;
-using Turify.Services;
+using Cafeteria.Data;
+using Cafeteria.Facades.Interfaces;
+using Cafeteria.Models;
+using Cafeteria.Models.DTOs;
+using Cafeteria.Models.Enums;
+using Cafeteria.Services;
 
-namespace Turify.Facades
+namespace Cafeteria.Facades
 {
   public class CafeteriaFacade : ICafeteriaFacade, IRetorno
   {
@@ -117,7 +117,7 @@ namespace Turify.Facades
 
         var novoId = Guid.NewGuid();
 
-        var novaCafeteria = new Cafeteria
+        var novaCafeteria = new Models.Cafeteria
         {
           Id = novoId,
           Nome = cafeteria.Nome,
