@@ -19,9 +19,9 @@ namespace Turify.Controllers
 
     [AllowAnonymous]
     [HttpGet()]
-    public async Task<IActionResult> GetAll([FromQuery] double? lat, [FromQuery] double? lng, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
-      var retorno = await _cafeteriaFacade.GetAllFacade(lat, lng, page, pageSize);
+      var retorno = await _cafeteriaFacade.GetAllFacade(page, pageSize);
 
       if (retorno.Sucesso == false)
         return BadRequest(retorno);
