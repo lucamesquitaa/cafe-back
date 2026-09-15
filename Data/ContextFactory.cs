@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace Turify.Data
+namespace Cafeteria.Data
 {
     public class ContextFactory : IDesignTimeDbContextFactory<Context>
     {

@@ -1,11 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Turify.Data;
-using Turify.Facades.Interfaces;
-using Turify.Models;
-using Turify.Models.Enums;
-using Turify.Services;
+using Cafeteria.Data;
+using Cafeteria.Facades.Interfaces;
+using Cafeteria.Models;
+using Cafeteria.Models.Enums;
+using Cafeteria.Services;
 
-namespace Turify.Facades
+namespace Cafeteria.Facades
 {
   public class UtilsFacade
   {
@@ -24,7 +24,7 @@ namespace Turify.Facades
     {
       var user = await _context.UsuarioPermissao.FirstOrDefaultAsync(x => x.UserModelId == userId && x.CafeteriaId == cafeteriaId);
 
-      bool userIsAdmin = user?.Role == RoleUserModel.Admin || user?.Role == RoleUserModel.Manager || user?.Role == RoleUserModel.Turify;
+      bool userIsAdmin = user?.Role == RoleUserModel.Admin || user?.Role == RoleUserModel.Manager || user?.Role == RoleUserModel.Cafeteria;
 
       return userIsAdmin;
     }
@@ -33,7 +33,7 @@ namespace Turify.Facades
     {
       var user = await _context.UsuarioPermissao.FirstOrDefaultAsync(x => x.UserModelId == userId && x.CafeteriaId == cafeteriaId);
 
-      bool userIsAdmin = user?.Role == RoleUserModel.Admin || user?.Role == RoleUserModel.Turify;
+      bool userIsAdmin = user?.Role == RoleUserModel.Admin || user?.Role == RoleUserModel.Cafeteria;
 
       return userIsAdmin;
     }

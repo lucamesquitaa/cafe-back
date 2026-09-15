@@ -1,14 +1,15 @@
 using Microsoft.EntityFrameworkCore;
-using Turify.Models;
+using Cafeteria.Models;
+using CafeteriaModel = Cafeteria.Models.Cafeteria;
 
-namespace Turify.Data
+namespace Cafeteria.Data
 {
   public class Context : DbContext
   {
     public DbSet<UserModel> Usuarios { get; set; }
     public DbSet<UsuarioPermissoes> UsuarioPermissao { get; set; }
     public DbSet<ErroLogModel> ErrorLogs { get; set; }
-    public DbSet<Cafeteria> Cafeterias { get; set; }
+    public DbSet<CafeteriaModel> Cafeterias { get; set; }
 
     public Context(DbContextOptions<Context> options) : base(options)
     {
@@ -26,7 +27,7 @@ namespace Turify.Data
           .OnDelete(DeleteBehavior.Cascade);
 
       // Relacionamento 1:N entre Cafeteria e UsuarioPermissoes
-      modelBuilder.Entity<Cafeteria>()
+      modelBuilder.Entity<CafeteriaModel>()
           .HasMany(h => h.Permissions)
           .WithOne()
           .HasForeignKey(c => c.CafeteriaId)

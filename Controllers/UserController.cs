@@ -3,17 +3,17 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using NuGet.Common;
-using Turify.Data;
-using Turify.Facades;
-using Turify.Facades.Interfaces;
-using Turify.Models;
-using Turify.Models.DTOs;
-using Turify.Models.Enums;
+using Cafeteria.Data;
+using Cafeteria.Facades;
+using Cafeteria.Facades.Interfaces;
+using Cafeteria.Models;
+using Cafeteria.Models.DTOs;
+using Cafeteria.Models.Enums;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace Turify.Controllers
+namespace Cafeteria.Controllers
 {
   [ApiController]
   [Route("api/[controller]")]
@@ -36,13 +36,13 @@ namespace Turify.Controllers
     {
       var result = await _userFacade.LoginAndRegisterGoogle(userGoogle);
 
-      if (result != null && result.Data != null && !string.IsNullOrEmpty(result.Data.Email))
+      if (result != null && result.Sucesso && result.Data != null && !string.IsNullOrEmpty(result.Data.Email))
       {
         var token = GenerateJwtToken(result.Data.Email, RoleUserModel.User);
         return Ok(new { token = token });
       }
 
-      return Unauthorized("Token de login expirado.");
+      return Unauthorized(result?.Mensagem ?? "Token de login inválido ou expirado.");
     }
 
     [HttpPost("GetAllPermissionUsers")]

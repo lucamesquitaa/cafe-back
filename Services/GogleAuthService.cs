@@ -1,9 +1,9 @@
 ﻿using Google.Apis.Auth;
 using Microsoft.AspNetCore.Mvc;
-using Turify.Models.Enums;
+using Cafeteria.Models.Enums;
 using System.IdentityModel.Tokens.Jwt;
 
-namespace Turify.Services
+namespace Cafeteria.Services
 {
   public class GoogleAuthService
   {
@@ -18,6 +18,15 @@ namespace Turify.Services
 
     public async Task<GoogleJsonWebSignature.Payload?> ValidateIdTokenAsync(string idToken)
     {
+      if (string.IsNullOrWhiteSpace(idToken))
+        return null;
+
+      if (string.IsNullOrWhiteSpace(_googleClientId))
+      {
+        Console.WriteLine("Authentication:Google:ClientId não configurado. Recusando login do Google.");
+        return null;
+      }
+
       try
       {
         var settings = new GoogleJsonWebSignature.ValidationSettings()
@@ -30,7 +39,12 @@ namespace Turify.Services
       }
       catch (InvalidJwtException ex)
       {
-        Console.WriteLine($"Token inválido: {ex.Message}");
+        Console.WriteLine($"Token do Google inválido: {ex.Message}");
+        return null;
+      }
+      catch (Exception ex)
+      {
+        Console.WriteLine($"Falha ao validar token do Google: {ex.Message}");
         return null;
       }
     }

@@ -1,4 +1,4 @@
-﻿namespace Turify.Facades.Interfaces
+﻿namespace Cafeteria.Facades.Interfaces
 {
   public interface IRetorno
   {

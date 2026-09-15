@@ -1,7 +1,7 @@
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace Turify.Filters
+namespace Cafeteria.Filters
 {
   public class SwaggerOperationFilter : IOperationFilter
   {

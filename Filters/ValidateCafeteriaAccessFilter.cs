@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Turify.Facades;
-using Turify.Facades.Interfaces;
-using Turify.Services;
+using Cafeteria.Facades;
+using Cafeteria.Facades.Interfaces;
+using Cafeteria.Services;
 
-namespace Turify.Filters
+namespace Cafeteria.Filters
 {
   [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
   public class ValidateCafeteriaAccessAttribute : TypeFilterAttribute

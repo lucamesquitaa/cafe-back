@@ -6,7 +6,7 @@
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v8.0": {
-      "Turify/1.0.0": {
+      "Cafeteria/1.0.0": {
         "dependencies": {
           "BCrypt.Net-Next": "4.0.3",
           "Genbox.SimpleS3.Extensions.GoogleCloudStorage": "3.2.11",
@@ -30,7 +30,7 @@
           "Swashbuckle.AspNetCore": "6.6.2"
         },
         "runtime": {
-          "Turify.dll": {}
+          "Cafeteria.dll": {}
         }
       },
       "Azure.Core/1.38.0": {
@@ -2389,7 +2389,7 @@
     }
   },
   "libraries": {
-    "Turify/1.0.0": {
+    "Cafeteria/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

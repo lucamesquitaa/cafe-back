@@ -35,14 +35,27 @@ services:
     volumes:
       - redis-data:/data
 
-  turify:
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: rabbitmq_local
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - "5672:5672"    # porta AMQP (usada pela aplicação)
+      - "15672:15672"  # porta da UI de management (http://localhost:15672)
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
+  cafeteria:
     build:
       context: .
       dockerfile: Dockerfile
       args:
         BUILD_CONFIGURATION: Debug
-    image: turify:latest
-    container_name: turify_local
+    image: cafeteria:1
+    container_name: cafeteria_local
     restart: always
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
@@ -52,6 +65,10 @@ services:
       senSiteWeb: ${SEN_SITE_WEB}
       Authentication__Google__ClientId: ${GOOGLE_CLIENT_ID}
       REDIS_HOST: redis:6379
+      RabbitMq__Host: rabbitmq
+      RabbitMq__Port: 5672
+      RabbitMq__Username: ${RABBITMQ_USER}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD}
     volumes:
       - ./HOMOLOG:/app/HOMOLOG:ro
     ports:
@@ -59,6 +76,7 @@ services:
     depends_on:
       - postgres
       - redis
+      - rabbitmq
 
   nginx:
     image: nginx:latest
@@ -69,7 +87,8 @@ services:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
       - /etc/letsencrypt:/etc/letsencrypt
     depends_on:
-       - turify
+       - cafeteria
 
 volumes:
   redis-data:
+  rabbitmq-data:
