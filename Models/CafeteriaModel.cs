@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Cafeteria.Models
 {
-  public class Cafeteria
+  public class CafeteriaModel
   {
     [Key]
     public Guid Id { get; set; } = Guid.NewGuid();
@@ -17,7 +17,7 @@ namespace Cafeteria.Models
     public string Cep { get; set; } = string.Empty;
     public string Cidade { get; set; } = string.Empty;
     public string Estado { get; set; } = string.Empty;
-    public string Complemento { get; set; } = string.Empty;
+    public string? Complemento { get; set; } 
     public string? FotoPrincipal { get; set; }
     public TypeCafeEnum CategoriaPrincipal { get; set; }
 

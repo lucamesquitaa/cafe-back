@@ -61,6 +61,28 @@ namespace Cafeteria.Facades
         throw new Exception("Erro ao processar a solicitação.");
       }
     }
+    public async Task<IRetorno<CafeteriaModel>> GetByManagerFacade(string id)
+    {
+      try
+      {
+        if (!Guid.TryParse(id, out var cafeteriaId))
+          return Retorno<CafeteriaModel>.Erro("Id inválido.");
+
+        var cafeteria = await _context.Cafeterias.AsNoTracking()
+         .Where(c => c.Id == cafeteriaId)
+         .FirstOrDefaultAsync();
+
+
+        if (cafeteria == null)
+          return Retorno<CafeteriaModel>.Erro("Cafeteria não encontrada.");
+
+        return Retorno<CafeteriaModel>.Ok(cafeteria, "Cafeteria encontrada com sucesso.");
+      }
+      catch (Exception)
+      {
+        throw new Exception("Erro ao processar a solicitação. id: " + id);
+      }
+    }
 
     public async Task<IRetorno<GetCafeteriaById>> GetByIdFacade(string id)
     {
@@ -131,7 +153,7 @@ namespace Cafeteria.Facades
           fotoPrincipalUrl = uploadRetorno.Data;
         }
 
-        var novaCafeteria = new Models.Cafeteria
+        var novaCafeteria = new Models.CafeteriaModel
         {
           Id = novoId,
           Nome = cafeteria.Nome,
@@ -208,6 +230,18 @@ namespace Cafeteria.Facades
         if (existente == null)
           return Retorno<GetCafeteriaById>.Erro("Cafeteria não encontrada.");
 
+        string? fotoPrincipalUrl = existente.FotoPrincipal;
+
+        if (cafeteria.FotoPrincipal != null && cafeteria.FotoPrincipal.Length > 0)
+        {
+          var uploadRetorno = await _photosFacade.UploadFotoPrincipalAsync(cafeteria.FotoPrincipal, cafeteria.Nome);
+
+          if (!uploadRetorno.Sucesso)
+            return Retorno<GetCafeteriaById>.Erro(uploadRetorno.Mensagem ?? "Erro ao enviar a foto principal.");
+
+          fotoPrincipalUrl = uploadRetorno.Data;
+        }
+
         existente.Nome = cafeteria.Nome;
         existente.Rede = cafeteria.Rede;
         existente.Url = cafeteria.Url;
@@ -220,7 +254,7 @@ namespace Cafeteria.Facades
         existente.Cidade = cafeteria.Cidade;
         existente.Estado = cafeteria.Estado;
         existente.Complemento = cafeteria.Complemento;
-        existente.FotoPrincipal = cafeteria.FotoPrincipal;
+        existente.FotoPrincipal = fotoPrincipalUrl;
         existente.CategoriaPrincipal = cafeteria.CategoriaPrincipal;
 
         await _context.SaveChangesAsync();

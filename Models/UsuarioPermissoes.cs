@@ -15,7 +15,7 @@ namespace Cafeteria.Models
     public Guid CafeteriaId { get; set; }
 
     [ForeignKey(nameof(CafeteriaId))]
-    public Cafeteria? Cafeteria { get; set; }
+    public CafeteriaModel? Cafeteria { get; set; }
     public string Role { get; set; } = string.Empty;
   }
 }
