@@ -55,8 +55,21 @@ namespace Cafeteria.Controllers
 
     [Authorize]
     [ValidateCafeteriaAccess]
+    [HttpGet("ByManager/{id}")]
+    public async Task<IActionResult> GetByManager(string id)
+    {
+      var retorno = await _cafeteriaFacade.GetByManagerFacade(id);
+
+      if (retorno.Sucesso == false)
+        return BadRequest(retorno);
+
+      return Ok(retorno);
+    }
+
+    [Authorize]
+    [ValidateCafeteriaAccess]
     [HttpPut("{id}")]
-    public async Task<IActionResult> Put([FromBody] AtualizarCafeteriaDTO obj, string id)
+    public async Task<IActionResult> Put([FromForm] AtualizarCafeteriaDTO obj, string id)
     {
       var retorno = await _cafeteriaFacade.PutFacade(obj, id);
 

@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Cafeteria.Models;
-using CafeteriaModel = Cafeteria.Models.Cafeteria;
+using CafeteriaModel = Cafeteria.Models.CafeteriaModel;
 
 namespace Cafeteria.Data
 {
@@ -23,14 +23,14 @@ namespace Cafeteria.Data
       // Relacionamento 1:N entre UserModel e UsuarioPermissoes
       modelBuilder.Entity<UserModel>()
           .HasMany(h => h.Permissions)
-          .WithOne()
+          .WithOne(c => c.User)
           .HasForeignKey(c => c.UserModelId)
           .OnDelete(DeleteBehavior.Cascade);
 
       // Relacionamento 1:N entre Cafeteria e UsuarioPermissoes
       modelBuilder.Entity<CafeteriaModel>()
           .HasMany(h => h.Permissions)
-          .WithOne()
+          .WithOne(c => c.Cafeteria)
           .HasForeignKey(c => c.CafeteriaId)
           .OnDelete(DeleteBehavior.Cascade);
 
