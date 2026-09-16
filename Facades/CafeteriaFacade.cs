@@ -13,12 +13,14 @@ namespace Cafeteria.Facades
     private readonly Context _context;
     private readonly GoogleAuthService _googleAuthService;
     private readonly UtilsFacade _utilsFacade;
+    private readonly PhotosFacade _photosFacade;
 
-    public CafeteriaFacade(Context context, GoogleAuthService googleAuthService, UtilsFacade utilsFacade)
+    public CafeteriaFacade(Context context, GoogleAuthService googleAuthService, UtilsFacade utilsFacade, PhotosFacade photosFacade)
     {
       _context = context;
       _googleAuthService = googleAuthService;
       _utilsFacade = utilsFacade;
+      _photosFacade = photosFacade;
     }
 
     // Implementation of IRetorno properties
@@ -117,6 +119,18 @@ namespace Cafeteria.Facades
 
         var novoId = Guid.NewGuid();
 
+        string? fotoPrincipalUrl = null;
+
+        if (cafeteria.FotoPrincipal != null && cafeteria.FotoPrincipal.Length > 0)
+        {
+          var uploadRetorno = await _photosFacade.UploadFotoPrincipalAsync(cafeteria.FotoPrincipal, cafeteria.Nome);
+
+          if (!uploadRetorno.Sucesso)
+            return Retorno<GetCafeteriaById>.Erro(uploadRetorno.Mensagem ?? "Erro ao enviar a foto principal.");
+
+          fotoPrincipalUrl = uploadRetorno.Data;
+        }
+
         var novaCafeteria = new Models.Cafeteria
         {
           Id = novoId,
@@ -131,6 +145,7 @@ namespace Cafeteria.Facades
           Complemento = cafeteria.Complemento,
           Cidade = "Belo Horizonte",
           Estado = "MG",
+          FotoPrincipal = fotoPrincipalUrl,
           NomeRep = cafeteria.NomeRep,
           TelRep = cafeteria.TelRep,
           CpfRep = cafeteria.CpfRep,

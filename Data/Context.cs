@@ -10,6 +10,7 @@ namespace Cafeteria.Data
     public DbSet<UsuarioPermissoes> UsuarioPermissao { get; set; }
     public DbSet<ErroLogModel> ErrorLogs { get; set; }
     public DbSet<CafeteriaModel> Cafeterias { get; set; }
+    public DbSet<FotosDetalhesModel> Photos { get; set; }
 
     public Context(DbContextOptions<Context> options) : base(options)
     {
@@ -31,6 +32,13 @@ namespace Cafeteria.Data
           .HasMany(h => h.Permissions)
           .WithOne()
           .HasForeignKey(c => c.CafeteriaId)
+          .OnDelete(DeleteBehavior.Cascade);
+
+      // Relacionamento 1:N entre Cafeteria e FotosDetalhesModel
+      modelBuilder.Entity<CafeteriaModel>()
+          .HasMany<FotosDetalhesModel>()
+          .WithOne(p => p.Cafeteria)
+          .HasForeignKey(p => p.CafeteriaId)
           .OnDelete(DeleteBehavior.Cascade);
     }
   }
