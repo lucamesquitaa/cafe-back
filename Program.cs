@@ -36,10 +36,11 @@ builder.Services.AddHttpContextAccessor();
 // Serviços
 builder.Services.AddTransient<UserFacade>();
 builder.Services.AddTransient<CafeteriaFacade>();
+builder.Services.AddTransient<PhotosFacade>();
 builder.Services.AddTransient<UtilsFacade>();
 builder.Services.AddSingleton<GoogleAuthService>();
-var connectionString = builder.Configuration.GetConnectionString("Default")
-    ?? Environment.GetEnvironmentVariable("CONNECTION_STRING")
+var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING")
+    ?? builder.Configuration.GetConnectionString("Default")
     ?? throw new InvalidOperationException(
         "Connection string não configurada. Defina ConnectionStrings__Default ou a variável de ambiente CONNECTION_STRING.");
 builder.Services.AddDbContext<Cafeteria.Data.Context>(options =>

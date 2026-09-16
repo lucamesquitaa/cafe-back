@@ -60,7 +60,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       PORT: 8080
-      ConnectionStrings__Default: "Host=postgres;Port=5432;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}"
+      CONNECTION_STRING: "Host=postgres;Port=5432;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}"
       jwttoken: ${JWT_SECRET}
       senSiteWeb: ${SEN_SITE_WEB}
       Authentication__Google__ClientId: ${GOOGLE_CLIENT_ID}

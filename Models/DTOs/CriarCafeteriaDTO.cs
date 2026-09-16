@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Http;
+
 namespace Cafeteria.Models.DTOs
 {
   public class CriarCafeteriaDTO
@@ -11,6 +13,7 @@ namespace Cafeteria.Models.DTOs
     public string Numero { get; set; } = string.Empty;
     public string Cep { get; set; } = string.Empty;
     public string Complemento { get; set; } = string.Empty;
+    public IFormFile? FotoPrincipal { get; set; }
 
     //infos privadas
 

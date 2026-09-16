@@ -43,7 +43,7 @@ namespace Cafeteria.Controllers
 
     [Authorize]
     [HttpPost()]
-    public async Task<IActionResult> Post([FromBody] CriarCafeteriaDTO obj)
+    public async Task<IActionResult> Post([FromForm] CriarCafeteriaDTO obj)
     {
       var retorno = await _cafeteriaFacade.PostFacade(obj);
 
