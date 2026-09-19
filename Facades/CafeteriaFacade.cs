@@ -1,10 +1,12 @@
-using Microsoft.EntityFrameworkCore;
 using Cafeteria.Data;
 using Cafeteria.Facades.Interfaces;
 using Cafeteria.Models;
 using Cafeteria.Models.DTOs;
 using Cafeteria.Models.Enums;
 using Cafeteria.Services;
+using Microsoft.EntityFrameworkCore;
+using System.Text;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Cafeteria.Facades
 {
@@ -14,13 +16,15 @@ namespace Cafeteria.Facades
     private readonly GoogleAuthService _googleAuthService;
     private readonly UtilsFacade _utilsFacade;
     private readonly PhotosFacade _photosFacade;
+    private readonly RabbitMqConnection _rabbitMq;
 
-    public CafeteriaFacade(Context context, GoogleAuthService googleAuthService, UtilsFacade utilsFacade, PhotosFacade photosFacade)
+    public CafeteriaFacade(Context context, GoogleAuthService googleAuthService, UtilsFacade utilsFacade, PhotosFacade photosFacade, RabbitMqConnection rabbitMq)
     {
       _context = context;
       _googleAuthService = googleAuthService;
       _utilsFacade = utilsFacade;
       _photosFacade = photosFacade;
+      _rabbitMq = rabbitMq;
     }
 
     // Implementation of IRetorno properties
@@ -192,24 +196,12 @@ namespace Cafeteria.Facades
         await _context.UsuarioPermissao.AddAsync(permissao);
         await _context.SaveChangesAsync();
 
+        RabbitMQRegistraCafeteria(novoId, TipoRequisicao.POST);
+
         return Retorno<GetCafeteriaById>.Ok(new GetCafeteriaById
         {
           Id = novaCafeteria.Id,
-          Nome = novaCafeteria.Nome,
-          Rede = novaCafeteria.Rede,
-          Url = novaCafeteria.Url,
-          Descricao = novaCafeteria.Descricao,
-          Diferencial = novaCafeteria.Diferencial,
-          Ativo = novaCafeteria.Ativo,
-          Endereco = novaCafeteria.Endereco,
-          Numero = novaCafeteria.Numero,
-          Cep = novaCafeteria.Cep,
-          Cidade = novaCafeteria.Cidade,
-          Estado = novaCafeteria.Estado,
-          Complemento = novaCafeteria.Complemento,
-          FotoPrincipal = novaCafeteria.FotoPrincipal,
-          CategoriaPrincipal = novaCafeteria.CategoriaPrincipal,
-          CriadoEm = novaCafeteria.CriadoEm
+          Nome = novaCafeteria.Nome
         }, "Cafeteria criada com sucesso.");
       }
       catch (Exception)
@@ -259,29 +251,45 @@ namespace Cafeteria.Facades
 
         await _context.SaveChangesAsync();
 
+        RabbitMQRegistraCafeteria(cafeteriaId, TipoRequisicao.PUT);
+
         return Retorno<GetCafeteriaById>.Ok(new GetCafeteriaById
         {
           Id = existente.Id,
-          Nome = existente.Nome,
-          Rede = existente.Rede,
-          Url = existente.Url,
-          Descricao = existente.Descricao,
-          Diferencial = existente.Diferencial,
-          Ativo = existente.Ativo,
-          Endereco = existente.Endereco,
-          Numero = existente.Numero,
-          Cep = existente.Cep,
-          Cidade = existente.Cidade,
-          Estado = existente.Estado,
-          Complemento = existente.Complemento,
-          FotoPrincipal = existente.FotoPrincipal,
-          CategoriaPrincipal = existente.CategoriaPrincipal,
-          CriadoEm = existente.CriadoEm
-        }, "Cafeteria atualizada com sucesso.");
+          Nome = existente.Nome}, "Cafeteria atualizada com sucesso.");
       }
       catch (Exception)
       {
         throw new Exception("Erro ao processar a solicitação. id: " + id);
+      }
+    }
+
+    private const string FilaCafeteria = "cafeteria.eventos";
+
+    private void RabbitMQRegistraCafeteria(Guid id, TipoRequisicao reqType)
+    {
+      try
+      {
+        using var channel = _rabbitMq.CreateChannel();
+        channel.QueueDeclare(queue: FilaCafeteria, durable: true, exclusive: false, autoDelete: false, arguments: null);
+
+        var mensagem = new MensagemCafeteria
+        {
+          cafeteriaId = id.ToString(),
+          reqType = reqType
+        };
+
+        var body = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(mensagem);
+
+        var properties = channel.CreateBasicProperties();
+        properties.Persistent = true;
+        properties.ContentType = "application/json";
+
+        channel.BasicPublish(exchange: "", routingKey: FilaCafeteria, mandatory: false, basicProperties: properties, body: body);
+      }
+      catch (Exception ex)
+      {
+        Console.WriteLine($"[RABBITMQ ERROR] Falha ao publicar evento da cafeteria {id} ({reqType}): {ex.Message}");
       }
     }
   }
