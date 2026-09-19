@@ -22,7 +22,4 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 
-# Configura para escutar na porta do ambiente
-ENV ASPNETCORE_URLS=http://0.0.0.0:${PORT}
-
 ENTRYPOINT ["dotnet", "Cafeteria.dll"]
