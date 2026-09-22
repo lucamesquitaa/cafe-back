@@ -40,6 +40,7 @@ builder.Services.AddTransient<PhotosFacade>();
 builder.Services.AddTransient<UtilsFacade>();
 builder.Services.AddSingleton<GoogleAuthService>();
 builder.Services.AddSingleton<RabbitMqConnection>();
+builder.Services.AddSingleton<RedisConnection>();
 var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING")
     ?? builder.Configuration.GetConnectionString("Default")
     ?? throw new InvalidOperationException(

@@ -5,6 +5,8 @@ using Cafeteria.Models.DTOs;
 using Cafeteria.Models.Enums;
 using Cafeteria.Services;
 using Microsoft.EntityFrameworkCore;
+using RabbitMQ.Client;
+using StackExchange.Redis;
 using System.Text;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -17,14 +19,17 @@ namespace Cafeteria.Facades
     private readonly UtilsFacade _utilsFacade;
     private readonly PhotosFacade _photosFacade;
     private readonly RabbitMqConnection _rabbitMq;
+    private readonly RedisConnection _redis;
 
-    public CafeteriaFacade(Context context, GoogleAuthService googleAuthService, UtilsFacade utilsFacade, PhotosFacade photosFacade, RabbitMqConnection rabbitMq)
+    public CafeteriaFacade(Context context, GoogleAuthService googleAuthService, UtilsFacade utilsFacade, PhotosFacade photosFacade, RabbitMqConnection rabbitMq, RedisConnection redis)
     {
       _context = context;
       _googleAuthService = googleAuthService;
       _utilsFacade = utilsFacade;
       _photosFacade = photosFacade;
       _rabbitMq = rabbitMq;
+      _redis = redis;
+      RabbitMQRegistraCafeteria();
     }
 
     // Implementation of IRetorno properties
@@ -192,11 +197,30 @@ namespace Cafeteria.Facades
           Role = RoleUserModel.Admin
         };
 
+        //garantir idempotencia na chave id + data
+        var redis = _redis.GetDatabase();
+
         await _context.Cafeterias.AddAsync(novaCafeteria);
         await _context.UsuarioPermissao.AddAsync(permissao);
         await _context.SaveChangesAsync();
 
-        RabbitMQRegistraCafeteria(novoId, TipoRequisicao.POST);
+        var chaveIdempotencia = $"evento:cafeteria:{TipoRequisicao.POST}:{novoId}";
+
+        bool podeSubir = await redis.StringSetAsync(
+            chaveIdempotencia,
+            DateTime.UtcNow.ToString("O"),
+            expiry: TimeSpan.FromMinutes(10),
+            when: When.NotExists
+        );
+
+        if (podeSubir)
+        {
+          PublicaEventoCafeteria(novoId, novaCafeteria, TipoRequisicao.POST);
+        }
+        else
+        {
+          throw new Exception("Evento já publicado, ignorando reenvio.");
+        }
 
         return Retorno<GetCafeteriaById>.Ok(new GetCafeteriaById
         {
@@ -204,9 +228,9 @@ namespace Cafeteria.Facades
           Nome = novaCafeteria.Nome
         }, "Cafeteria criada com sucesso.");
       }
-      catch (Exception)
+      catch (Exception ex)
       {
-        throw new Exception("Erro ao processar a solicitação.");
+        throw new Exception("Erro ao processar a solicitação: " + ex.Message);
       }
     }
 
@@ -249,9 +273,28 @@ namespace Cafeteria.Facades
         existente.FotoPrincipal = fotoPrincipalUrl;
         existente.CategoriaPrincipal = cafeteria.CategoriaPrincipal;
 
+        //garantir idempotencia na chave id + data
+        var redis = _redis.GetDatabase();
+
         await _context.SaveChangesAsync();
 
-        RabbitMQRegistraCafeteria(cafeteriaId, TipoRequisicao.PUT);
+        var chaveIdempotencia = $"evento:cafeteria:{TipoRequisicao.PUT}:{cafeteriaId}";
+
+        bool podeSubir = await redis.StringSetAsync(
+            chaveIdempotencia,
+            DateTime.UtcNow.ToString("O"),
+            expiry: TimeSpan.FromMinutes(10),
+            when: When.NotExists
+        );
+
+        if (podeSubir)
+        {
+          PublicaEventoCafeteria(cafeteriaId, existente, TipoRequisicao.PUT);
+        }
+        else
+        {
+          throw new Exception("Evento já publicado, ignorando reenvio.");
+        }
 
         return Retorno<GetCafeteriaById>.Ok(new GetCafeteriaById
         {
@@ -264,18 +307,85 @@ namespace Cafeteria.Facades
       }
     }
 
-    private const string FilaCafeteria = "cafeteria.eventos";
+    private const string Exchange = "cafeteria.exchange";
 
-    private void RabbitMQRegistraCafeteria(Guid id, TipoRequisicao reqType)
+    private static readonly Dictionary<TipoRequisicao, string> RoutingKeysPorTipo = new()
+    {
+      [TipoRequisicao.POST] = "cafeteria.post",
+      [TipoRequisicao.PUT] = "cafeteria.put",
+    };
+
+    private const string RoutingKeyErro = "cafeteria.error";
+
+    /// <summary>
+    /// Declara a exchange e as filas da cafeteria. Deve ser chamado uma única vez
+    /// (é acionado pelo construtor, de forma fire-and-forget) para garantir que a
+    /// topologia exista antes de publicar, sem bloquear a thread do construtor.
+    /// </summary>
+    private async void RabbitMQRegistraCafeteria()
     {
       try
       {
+        await Task.Run(() =>
+        {
+          using var channel = _rabbitMq.CreateChannel();
+
+          channel.ExchangeDeclare(
+              exchange: Exchange,
+              type: ExchangeType.Topic,
+              durable: true,
+              autoDelete: false);
+
+          // Uma fila para cada tipo de requisição, mais uma fila de dead-letter para falhas de publicação
+          var filas = new Dictionary<string, string>
+          {
+            ["fila.cafeteria.post"] = RoutingKeysPorTipo[TipoRequisicao.POST],
+            ["fila.cafeteria.put"] = RoutingKeysPorTipo[TipoRequisicao.PUT],
+            ["fila.cafeteria.error"] = RoutingKeyErro,
+          };
+
+          foreach (var (fila, routingKey) in filas)
+          {
+            channel.QueueDeclare(
+                queue: fila,
+                durable: true,
+                exclusive: false,
+                autoDelete: false,
+                arguments: null);
+
+            channel.QueueBind(
+                queue: fila,
+                exchange: Exchange,
+                routingKey: routingKey);
+          }
+        });
+      }
+      catch (Exception ex)
+      {
+        Console.WriteLine($"[RABBITMQ ERROR] Falha ao registrar a topologia da cafeteria: {ex.Message}");
+      }
+    }
+
+    /// <summary>
+    /// Publica o evento da cafeteria na routing key correspondente ao reqType.
+    /// Em caso de falha, publica uma mensagem de dead-letter na fila de erro.
+    /// </summary>
+    private void PublicaEventoCafeteria(Guid id, CafeteriaModel obj, TipoRequisicao reqType)
+    {
+      try
+      {
+        if (!RoutingKeysPorTipo.TryGetValue(reqType, out var routingKey))
+          throw new ArgumentOutOfRangeException(nameof(reqType), reqType, "Tipo de requisição não suportado.");
+
         using var channel = _rabbitMq.CreateChannel();
-        channel.QueueDeclare(queue: FilaCafeteria, durable: true, exclusive: false, autoDelete: false, arguments: null);
 
         var mensagem = new MensagemCafeteria
         {
+          messageId = $"{id}_{reqType}_{DateTime.UtcNow:yyyy-MM-dd}",
           cafeteriaId = id.ToString(),
+          name = obj.Nome,
+          photo = obj.FotoPrincipal!,
+          date = DateTime.UtcNow,
           reqType = reqType
         };
 
@@ -285,11 +395,41 @@ namespace Cafeteria.Facades
         properties.Persistent = true;
         properties.ContentType = "application/json";
 
-        channel.BasicPublish(exchange: "", routingKey: FilaCafeteria, mandatory: false, basicProperties: properties, body: body);
+        channel.BasicPublish(exchange: Exchange, routingKey: routingKey, mandatory: false, basicProperties: properties, body: body);
       }
       catch (Exception ex)
       {
         Console.WriteLine($"[RABBITMQ ERROR] Falha ao publicar evento da cafeteria {id} ({reqType}): {ex.Message}");
+        PublicaDeadLetterCafeteria(id, reqType, obj.Nome, ex.Message);
+      }
+    }
+
+    private void PublicaDeadLetterCafeteria(Guid id, TipoRequisicao reqType, string nome, string erro)
+    {
+      try
+      {
+        using var channel = _rabbitMq.CreateChannel();
+
+        var mensagem = new MensagemCafeteriaDeadLetter
+        {
+          cafeteriaId = id.ToString(),
+          reqType = reqType,
+          name = nome,
+          Erro = erro,
+          FalhaEm = DateTime.UtcNow
+        };
+
+        var body = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(mensagem);
+
+        var properties = channel.CreateBasicProperties();
+        properties.Persistent = true;
+        properties.ContentType = "application/json";
+
+        channel.BasicPublish(exchange: Exchange, routingKey: RoutingKeyErro, mandatory: false, basicProperties: properties, body: body);
+      }
+      catch (Exception ex)
+      {
+        Console.WriteLine($"[RABBITMQ ERROR] Falha ao publicar dead-letter da cafeteria {id} ({reqType}): {ex.Message}");
       }
     }
   }
